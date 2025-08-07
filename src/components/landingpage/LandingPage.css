@@ -1,0 +1,79 @@
+.box-container {
+    min-height: 70vh;
+}
+
+.hero-section {
+    margin-bottom: 1rem;
+    text-align: center;
+}
+
+.hero-section h1 {
+    color: #2F6798;
+    font-size: 2.2rem;
+    margin-bottom: 0.5rem;
+}
+
+.hero-section p {
+    color: #555;
+    font-size: 1.15rem;
+}
+
+.expect-section, .mic-setup-section {
+    margin-bottom: 1.5rem;
+}
+
+.expect-section h2, .mic-setup-section h2 {
+    color: #2F6798;
+    font-size: 1.3rem;
+    margin-bottom: 0.5rem;
+}
+
+.expect-section ul, .mic-setup-section ol {
+    margin-left: 1.5rem;
+    color: #444;
+    font-size: 1.05rem;
+}
+
+.cta-section {
+    display: flex;
+    justify-content: center;
+    margin-top: 2rem;
+}
+
+.start-btn {
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 0.8rem 2.5rem;
+    font-size: 1.15rem;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(37,99,235,0.08);
+    transition: all 0.3s ease;
+    margin-bottom: 1rem;
+    min-width: 200px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.start-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+}
+
+.start-btn:active:not(:disabled) {
+    transform: translateY(0px);
+}
+
+.start-btn.new-application {
+    background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+    margin-bottom: 0;
+}
+
+.start-btn.new-application:hover:not(:disabled) {
+    background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(34, 197, 94, 0.6);
+}

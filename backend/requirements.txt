@@ -1,0 +1,16 @@
+flask
+flask-cors
+pyttsx3
+sounddevice
+soundfile
+whisper
+language_tool_python
+praat-parselmouth
+numpy
+openai
+faster-whisper
+deepgram-sdk
+python-dotenv
+# System dependencies required:
+# - ffmpeg (for audio conversion)
+# - Praat (for parselmouth, if not included) 

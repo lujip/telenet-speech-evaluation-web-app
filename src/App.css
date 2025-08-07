@@ -1,0 +1,14 @@
+body {
+  min-height: 100vh;
+  margin: 0;
+  padding: 0 20px;
+  background: linear-gradient(135deg, #c0cbfd 0%, #34699A 100%);
+  font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+}
+
+@media (max-width: 768px) {
+  body {
+    padding: 0 10px;
+  }
+}
+
