@@ -142,14 +142,14 @@ const AdminDetailsModal = ({ applicant, onClose }) => {
 
             {activeTab === 'placeholder-1' && (
               <div className="placeholder-content">
-                <h3>Placeholder 1</h3>
+                <h3>Listen Test (Not implemented)</h3>
                 <p>This is a placeholder tab. Content will be added here in the future.</p>
               </div>
             )}
 
             {activeTab === 'placeholder-2' && (
               <div className="placeholder-content">
-                <h3>Placeholder 2</h3>
+                <h3>Typing Test (Not implemented)</h3>
                 <p>This is a placeholder tab. Content will be added here in the future.</p>
               </div>
             )}

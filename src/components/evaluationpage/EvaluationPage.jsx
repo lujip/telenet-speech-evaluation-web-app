@@ -322,23 +322,6 @@ const EvaluationPage = () => {
     }
   };
 
-  // Helper to prettify metrics and nested objects
-  const prettyPrint = (obj) => {
-    if (!obj) return null;
-    return (
-      <ul style={{ paddingLeft: 20 }}>
-        {Object.entries(obj).map(([k, v]) => (
-          <li key={k}>
-            <b>{k.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}:</b>{' '}
-            {typeof v === 'object' && v !== null
-              ? prettyPrint(v) // Recursively print nested objects
-              : (typeof v === 'number' ? v.toFixed(2) : v)}
-          </li>
-        ))}
-      </ul>
-    );
-  };
-
   // Format time display
   const formatTime = (seconds) => {
     const mins = Math.floor(seconds / 60);

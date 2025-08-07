@@ -28,7 +28,7 @@ const LandingPage = () => {
       <div className="box-container">
         {/* Hero Section */}
         <section className="hero-section">
-          <h1>Welcome to the Voice Evaluation Test</h1>
+          <h1>Welcome to the Tele-net Evaluation Test</h1>
           <p>
           This short speaking assessment helps us evaluate your communication skills for a potential role in our call center team. 
           You'll be asked a few job-related questions and will respond using your microphone.
@@ -39,10 +39,10 @@ const LandingPage = () => {
         <section className="expect-section">
           <h2>What to Expect</h2>
           <ul>
-            <li>🎤 5–6 short interview questions</li>
-            <li>⏱ Each response should be spoken within 30–60 seconds</li>
-            <li>📄 Instant feedback and score based on your speech</li>
-            <li>✅ No need to repeat questions - just answer naturally</li>
+            <li>Short interview questions</li>
+            <li>Each response should be spoken within 30–60 seconds</li>
+            <li>Instant feedback and score based on your speech</li>
+            <li>No need to repeat questions - just answer naturally</li>
           </ul>
         </section>
 
@@ -50,10 +50,11 @@ const LandingPage = () => {
         <section className="mic-setup-section">
           <h2>Mic Setup & Instructions</h2>
           <ol>
-            <li>Use a quiet environment with minimal background noise  </li>
-            <li>Ensure your microphone is working </li>
+            <li>Use a quiet environment with minimal background noise</li>
+            <li>Ensure your microphone is working</li>
             <li>Speak clearly and naturally - just like in a real interview</li>
             <li>Grant browser permission to access your microphone when prompted</li>
+            <li>You can use the listen test to test your microphone before starting the evaluation</li>
           </ol>
         </section>
 
