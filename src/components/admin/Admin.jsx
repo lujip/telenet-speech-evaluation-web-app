@@ -117,6 +117,24 @@ const Admin = () => {
     return (totalScore / evaluations.length).toFixed(1);
   };
 
+  const getTypingTestStats = (evaluations) => {
+    if (!evaluations || evaluations.length === 0) return null;
+    
+    const typingTests = evaluations.filter(evaluation => evaluation.type === 'typing');
+    if (typingTests.length === 0) return null;
+    
+    const totalWPM = typingTests.reduce((sum, test) => sum + (test.words_per_minute || 0), 0);
+    const totalAccuracy = typingTests.reduce((sum, test) => sum + (test.accuracy_percentage || 0), 0);
+    const averageWPM = (totalWPM / typingTests.length).toFixed(1);
+    const averageAccuracy = (totalAccuracy / typingTests.length).toFixed(1);
+    
+    return {
+      count: typingTests.length,
+      averageWPM,
+      averageAccuracy
+    };
+  };
+
   const getCompletionStatus = (applicant) => {
     if (!applicant.evaluations) return 'Not Started';
     if (applicant.evaluations.length === 0) return 'Not Started';
@@ -283,57 +301,73 @@ const Admin = () => {
                 <p>No applicants found matching your criteria.</p>
               </div>
             ) : (
-              filteredApplicants.map((applicant, index) => (
-                <div key={`${applicant.id}_${index}`} className="applicant-card">
-                  <div className="applicant-header">
-                    <h3>{applicant.applicant_info?.fullName || 'Unknown'}</h3>
-                    <span 
-                      className="status-badge"
-                      style={{ backgroundColor: getStatusColor(getCompletionStatus(applicant)) }}
-                    >
-                      {getCompletionStatus(applicant)}
-                    </span>
-                  </div>
-                  
-                  <div className="applicant-info">
-                    <p><strong>Email:</strong> {applicant.applicant_info?.email || 'N/A'}</p>
-                    <p><strong>Role:</strong> {applicant.applicant_info?.role || 'N/A'}</p>
-                    <p><strong>Phone:</strong> {applicant.applicant_info?.phone || 'N/A'}</p>
-                    <p><strong>Experience:</strong> {applicant.applicant_info?.experience || 'N/A'}</p>
-                    <p><strong>Current Company:</strong> {applicant.applicant_info?.currentCompany || 'N/A'}</p>
-                    <p><strong>Applied:</strong> {formatDate(applicant.application_timestamp)}</p>
-                    {applicant.completion_timestamp && (
-                      <p><strong>Completed:</strong> {formatDate(applicant.completion_timestamp)}</p>
-                    )}
-                  </div>
-
-                  <div className="applicant-stats">
-                    <div className="stat-item">
-                      <span>Questions:</span>
-                      <span>{applicant.evaluations?.length || 0}/{applicant.total_questions || 0}</span>
+              filteredApplicants.map((applicant, index) => {
+                const typingStats = getTypingTestStats(applicant.evaluations);
+                
+                return (
+                  <div key={`${applicant.id}_${index}`} className="applicant-card">
+                    <div className="applicant-header">
+                      <h3>{applicant.applicant_info?.fullName || 'Unknown'}</h3>
+                      <span 
+                        className="status-badge"
+                        style={{ backgroundColor: getStatusColor(getCompletionStatus(applicant)) }}
+                      >
+                        {getCompletionStatus(applicant)}
+                      </span>
                     </div>
-                    <div className="stat-item">
-                      <span>Average Score:</span>
-                      <span>{getAverageScore(applicant.evaluations)}/10</span>
+                    
+                    <div className="applicant-info">
+                      <p><strong>Email:</strong> {applicant.applicant_info?.email || 'N/A'}</p>
+                      <p><strong>Role:</strong> {applicant.applicant_info?.role || 'N/A'}</p>
+                      <p><strong>Phone:</strong> {applicant.applicant_info?.phone || 'N/A'}</p>
+                      <p><strong>Experience:</strong> {applicant.applicant_info?.experience || 'N/A'}</p>
+                      <p><strong>Current Company:</strong> {applicant.applicant_info?.currentCompany || 'N/A'}</p>
+                      <p><strong>Applied:</strong> {formatDate(applicant.application_timestamp)}</p>
+                      {applicant.completion_timestamp && (
+                        <p><strong>Completed:</strong> {formatDate(applicant.completion_timestamp)}</p>
+                      )}
+                    </div>
+
+                    <div className="applicant-stats">
+                      <div className="stat-item">
+                        <span>Questions:</span>
+                        <span>{applicant.evaluations?.length || 0}/{applicant.total_questions || 0}</span>
+                      </div>
+                      <div className="stat-item">
+                        <span>Average Score:</span>
+                        <span>{getAverageScore(applicant.evaluations)}/10</span>
+                      </div>
+                      {typingStats && (
+                        <>
+                          <div className="stat-item">
+                            <span>Typing Tests:</span>
+                            <span>{typingStats.count}</span>
+                          </div>
+                          <div className="stat-item">
+                            <span>Avg WPM:</span>
+                            <span>{typingStats.averageWPM}</span>
+                          </div>
+                        </>
+                      )}
+                    </div>
+
+                    <div className="applicant-actions">
+                      <button
+                        onClick={() => setSelectedApplicant(applicant)}
+                        className="view-details-button"
+                      >
+                        📋 Details
+                      </button>
+                      <button
+                        onClick={() => handleDeleteApplicant(applicant.id)}
+                        className="delete-applicant-button"
+                      >
+                        🗑️ Delete
+                      </button>
                     </div>
                   </div>
-
-                  <div className="applicant-actions">
-                    <button
-                      onClick={() => setSelectedApplicant(applicant)}
-                      className="view-details-button"
-                    >
-                      📋 Details
-                    </button>
-                    <button
-                      onClick={() => handleDeleteApplicant(applicant.id)}
-                      className="delete-applicant-button"
-                    >
-                      🗑️ Delete
-                    </button>
-                  </div>
-                </div>
-              ))
+                );
+              })
             )}
           </div>
         </>

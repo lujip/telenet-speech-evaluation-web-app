@@ -3,6 +3,7 @@ import './EvaluationPage.css';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { useSession } from '../../contexts/SessionContext.jsx';
+import TypingTest from '../typingtest/TypingTest.jsx';
 
 const EvaluationPage = () => {
   console.log("EvaluationPage component mounted");
@@ -18,6 +19,9 @@ const EvaluationPage = () => {
   const [totalQuestions, setTotalQuestions] = useState(0);
   const [timeLeft, setTimeLeft] = useState(60);
   const [hasAnswered, setHasAnswered] = useState(false);
+  const [showTypingTest, setShowTypingTest] = useState(false);
+  const [typingTestCompleted, setTypingTestCompleted] = useState(false);
+  const [typingResults, setTypingResults] = useState(null);
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
   const [audioUrl, setAudioUrl] = useState(null);
@@ -305,6 +309,12 @@ const EvaluationPage = () => {
     setLoading(false);
   };
 
+  const handleTypingTestComplete = (results) => {
+    setTypingResults(results);
+    setTypingTestCompleted(true);
+    setShowTypingTest(false);
+  };
+
   const handleFinishEvaluation = async () => {
     try {
       if (sessionId) {
@@ -371,6 +381,47 @@ const EvaluationPage = () => {
     );
   };
 
+  // Show typing test results
+  const renderTypingResults = () => {
+    if (!typingResults) return null;
+    
+    return (
+      <div className="stats-card">
+        <h3>⌨️ Typing Test Results</h3>
+        <div className="stat-item">
+          <span className="stat-label">WPM</span>
+          <span className="stat-value">{typingResults.wpm}</span>
+        </div>
+        <div className="stat-item">
+          <span className="stat-label">Accuracy</span>
+          <span className="stat-value">{typingResults.accuracy}%</span>
+        </div>
+        <div className="stat-item">
+          <span className="stat-label">Words Typed</span>
+          <span className="stat-value">{typingResults.wordsTyped}</span>
+        </div>
+      </div>
+    );
+  };
+
+  // If showing typing test, render only that
+  if (showTypingTest) {
+    return (
+      <div className="main-content-vertical">
+        <div className="box-container">
+          <h1 className="speech-title">Typing Test</h1>
+          <p className="typing-intro">
+            Great job on the speech evaluation! Now let's test your typing skills. 
+            You'll have 60 seconds to type the text as accurately as possible.
+          </p>
+          <TypingTest 
+            sessionId={sessionId}
+            onComplete={handleTypingTestComplete}
+          />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="main-content-vertical">
@@ -428,11 +479,11 @@ const EvaluationPage = () => {
               </button>
             ) : (
               <button
-                onClick={handleFinishEvaluation}
+                onClick={() => setShowTypingTest(true)}
                 disabled={loading || recording || !hasAnswered}
-                className="finish-button"
+                className="typing-button"
               >
-                🏁 Finish Evaluation
+                ⌨️ Take Typing Test
               </button>
             )}
           </div>
@@ -475,6 +526,27 @@ const EvaluationPage = () => {
               <p>Your answer has been recorded and submitted for evaluation.</p>
               <p>The results will be available to the evaluation team.</p>
             </div>
+            {currentQuestionIndex + 1 >= totalQuestions && (
+              <div className="typing-notice">
+                <p>🎉 All speech questions completed! Click "Take Typing Test" to continue.</p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {typingTestCompleted && (
+          <div className="typing-complete-section">
+            <h3>✅ Typing Test Completed!</h3>
+            <div className="completion-notice">
+              <p>Great job! You've completed both the speech evaluation and typing test.</p>
+              <p>Click "Finish Evaluation" to complete your assessment.</p>
+            </div>
+            <button
+              onClick={handleFinishEvaluation}
+              className="finish-button"
+            >
+              🏁 Finish Evaluation
+            </button>
           </div>
         )}
       </div>
@@ -482,39 +554,30 @@ const EvaluationPage = () => {
       {/* Sidebar */}
       <div className="sidebar">
         {renderApplicantInfo()}
-
+        
         <div className="stats-card">
-          <h3>💡 Tips</h3>
-          <div style={{color: '#4a5568', fontSize: '0.9rem', lineHeight: '1.5'}}>
-            <p>• Speak clearly and at a moderate pace</p>
-            <p>• Use specific examples in your answers</p>
-            <p>• Stay calm and confident</p>
-            <p>• Address all parts of the question</p>
-            <p>• You have 60 seconds per answer</p>
+          <h3>📊 Session Progress</h3>
+          <div className="stat-item">
+            <span className="stat-label">Questions</span>
+            <span className="stat-value">{currentQuestionIndex + 1} / {totalQuestions}</span>
           </div>
+          <div className="stat-item">
+            <span className="stat-label">Answered</span>
+            <span className="stat-value">{sessionStats.questionsAnswered}</span>
+          </div>
+          <div className="stat-item">
+            <span className="stat-label">Total Time</span>
+            <span className="stat-value">{Math.round(sessionStats.totalRecordingTime)}s</span>
+          </div>
+          {sessionStats.averageScore > 0 && (
+            <div className="stat-item">
+              <span className="stat-label">Avg Score</span>
+              <span className="stat-value">{sessionStats.averageScore}</span>
+            </div>
+          )}
         </div>
 
-        <div className="stats-card">
-          <h3>📊 Session Stats</h3>
-          <div className="stat-item">
-            <span className="stat-label">Questions Remaining</span>
-            <span className="stat-value">{totalQuestions - (currentQuestionIndex + 1)}</span>
-          </div>
-          <div className="stat-item">
-            <span className="stat-label">Current Question</span>
-            <span className="stat-value">{currentQuestionIndex + 1} of {totalQuestions}</span>
-          </div>
-          <div className="stat-item">
-            <span className="stat-label">Recording Time</span>
-            <span className="stat-value">{sessionStats.totalRecordingTime.toFixed(2)}s</span>
-          </div>
-          <div className="stat-item">
-            <span className="stat-label">Status</span>
-            <span className="stat-value">{hasAnswered ? 'Answered' : 'Pending'}</span>
-          </div>
-        </div>
-
-
+        {renderTypingResults()}
       </div>
     </div>
   );

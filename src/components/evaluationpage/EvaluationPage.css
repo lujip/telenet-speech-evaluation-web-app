@@ -99,6 +99,79 @@ button:active:not(:disabled) {
   transform: translateY(0px);
 }
 
+/* Typing test specific styles */
+.typing-button {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+  box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4) !important;
+}
+
+.typing-button:hover:not(:disabled) {
+  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.6) !important;
+}
+
+.typing-intro {
+  text-align: center;
+  font-size: 1.2rem;
+  color: #4a5568;
+  margin-bottom: 2rem;
+  line-height: 1.6;
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+  padding: 1.5rem;
+  border-radius: 12px;
+  border: 1px solid #bae6fd;
+}
+
+.typing-notice {
+  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+  border: 1px solid #bbf7d0;
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-top: 1.5rem;
+  text-align: center;
+}
+
+.typing-notice p {
+  margin: 0.5rem 0;
+  color: #166534;
+  font-weight: 500;
+}
+
+.typing-complete-section {
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+  border: 1px solid #bae6fd;
+  border-radius: 16px;
+  padding: 2rem;
+  margin: 2rem 0;
+  text-align: center;
+}
+
+.typing-complete-section h3 {
+  color: #0369a1;
+  margin-bottom: 1rem;
+  font-size: 1.5rem;
+}
+
+.completion-notice {
+  margin-bottom: 1.5rem;
+}
+
+.completion-notice p {
+  margin: 0.5rem 0;
+  color: #0c4a6e;
+  font-size: 1.1rem;
+}
+
+.finish-button {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important;
+  box-shadow: 0 4px 15px rgba(245, 158, 11, 0.4) !important;
+  font-size: 1.1rem;
+  padding: 1rem 2rem;
+}
+
+.finish-button:hover:not(:disabled) {
+  box-shadow: 0 6px 20px rgba(245, 158, 11, 0.6) !important;
+}
+
 /* Recording Status & Waveform */
 .recording-container {
   background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
@@ -410,16 +483,6 @@ button:active:not(:disabled) {
   display: inline-block;
   margin-bottom: 1rem;
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-
-.finish-button {
-  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%) !important;
-}
-
-.finish-button:hover:not(:disabled) {
-  background: linear-gradient(135deg, #16a34a 0%, #15803d 100%) !important;
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(34, 197, 94, 0.6) !important;
 }
 
 .next-button:disabled {

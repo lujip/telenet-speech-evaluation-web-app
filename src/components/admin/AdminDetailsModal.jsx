@@ -9,6 +9,14 @@ const AdminDetailsModal = ({ applicant, onClose }) => {
     return new Date(dateString).toLocaleString();
   };
 
+  // Filter typing test evaluations
+  const getTypingTestEvaluations = () => {
+    if (!applicant || !applicant.evaluations) return [];
+    return applicant.evaluations.filter(evaluation => evaluation.type === 'typing');
+  };
+
+  const typingEvaluations = getTypingTestEvaluations();
+
   if (!applicant) return null;
 
   return (
@@ -53,13 +61,13 @@ const AdminDetailsModal = ({ applicant, onClose }) => {
               className={`tab-button ${activeTab === 'placeholder-1' ? 'active' : ''}`}
               onClick={() => setActiveTab('placeholder-1')}
             >
-              📋 Personality Test Result
+              📋 Listening Test Result
             </button>
             <button 
-              className={`tab-button ${activeTab === 'placeholder-2' ? 'active' : ''}`}
-              onClick={() => setActiveTab('placeholder-2')}
+              className={`tab-button ${activeTab === 'typing-test' ? 'active' : ''}`}
+              onClick={() => setActiveTab('typing-test')}
             >
-              📋 IQ Test Result
+              ⌨️ Typing Test Result ({typingEvaluations.length})
             </button>
           </div>
 
@@ -147,10 +155,68 @@ const AdminDetailsModal = ({ applicant, onClose }) => {
               </div>
             )}
 
-            {activeTab === 'placeholder-2' && (
-              <div className="placeholder-content">
-                <h3>Typing Test (Not implemented)</h3>
-                <p>This is a placeholder tab. Content will be added here in the future.</p>
+            {activeTab === 'typing-test' && (
+              <div className="typing-test-section">
+                <h3>Typing Test Results ({typingEvaluations.length})</h3>
+                {typingEvaluations.length > 0 ? (
+                  typingEvaluations.map((typingEval, index) => (
+                    <div key={`typing_${applicant.id}_${index}`} className="typing-evaluation-item">
+                      <div className="typing-evaluation-header">
+                        <h4>Typing Test #{index + 1}</h4>
+                        <span className="wpm-badge">WPM: {typingEval.words_per_minute}</span>
+                      </div>
+                      
+                      <div className="typing-evaluation-content">
+                        <div className="typing-stats-grid">
+                          <div className="typing-stat">
+                            <span className="stat-label">Words Per Minute:</span>
+                            <span className="stat-value">{typingEval.words_per_minute}</span>
+                          </div>
+                          <div className="typing-stat">
+                            <span className="stat-label">Accuracy:</span>
+                            <span className="stat-value">{typingEval.accuracy_percentage}%</span>
+                          </div>
+                          <div className="typing-stat">
+                            <span className="stat-label">Words Typed:</span>
+                            <span className="stat-value">{typingEval.typed_words}</span>
+                          </div>
+                          <div className="typing-stat">
+                            <span className="stat-label">Time Taken:</span>
+                            <span className="stat-value">{typingEval.time_taken_seconds}s</span>
+                          </div>
+                        </div>
+
+                        <div className="typed-text-section">
+                          <h5>Typed Text:</h5>
+                          <div className="typed-text-display">
+                            {typingEval.typed_text || 'No text available'}
+                          </div>
+                        </div>
+
+                        <div className="test-info">
+                          <h5>Test Information:</h5>
+                          <div className="test-info-grid">
+                            <span><strong>Test ID:</strong> {typingEval.test_id}</span>
+                            <span><strong>Type:</strong> {typingEval.type}</span>
+                          </div>
+                        </div>
+
+                        <p className="timestamp">
+                          <small>Completed: {formatDate(typingEval.timestamp)}</small>
+                        </p>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="no-typing-results">
+                    <p>No typing test results available for this applicant.</p>
+                    <p className="typing-note">
+                      <small>
+                        Note: Typing test results will appear here once the applicant completes the typing test.
+                      </small>
+                    </p>
+                  </div>
+                )}
               </div>
             )}
           </div>
