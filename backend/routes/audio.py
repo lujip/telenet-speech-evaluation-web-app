@@ -69,15 +69,20 @@ def evaluate():
         from utils.file_ops import load_temp_evaluation  # Import function to load evaluation data
         temp_evaluations = load_temp_evaluation(session_id)  # Load existing evaluations for this session
         if not temp_evaluations:  # Check if no evaluations exist yet
-            temp_evaluations = {"evaluations": []}  # Initialize empty evaluations structure
+            temp_evaluations = {
+                "speech_eval": [],
+                "listening_test": [],
+                "written_test": [],
+                "typing_test": []
+            }
 
-        # Add new evaluation
-        temp_evaluations["evaluations"].append(evaluation_result)  # Append new evaluation to list
+        # Add new evaluation to speech_eval section
+        temp_evaluations["speech_eval"].append(evaluation_result)  # Append new evaluation to speech_eval list
 
         # Save back to temporary file
         save_temp_evaluation(temp_evaluations, session_id)  # Persist updated evaluations
 
-        print(f"Stored evaluation {len(temp_evaluations['evaluations'])} for session {session_id}")  # Log evaluation count
+        print(f"Stored speech evaluation {len(temp_evaluations['speech_eval'])} for session {session_id}")  # Log evaluation count
     
         # Remove uploaded and converted files after processing
     for path in [audio_webm_path, audio_wav_path]:  # Iterate through temporary audio files

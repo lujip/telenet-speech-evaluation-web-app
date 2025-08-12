@@ -78,10 +78,15 @@ def submit_typing_test():
         # Load existing temporary evaluations for this session
         temp_evaluations = load_temp_evaluation(session_id)
         if not temp_evaluations:
-            temp_evaluations = {"evaluations": []}
+            temp_evaluations = {
+                "speech_eval": [],
+                "listening_test": [],
+                "written_test": [],
+                "typing_test": []
+            }
         
-        # Add typing test result
-        temp_evaluations["evaluations"].append(typing_result)
+        # Add typing test result to typing_test section
+        temp_evaluations["typing_test"].append(typing_result)
         
         # Save back to temporary file
         save_temp_evaluation(temp_evaluations, session_id)

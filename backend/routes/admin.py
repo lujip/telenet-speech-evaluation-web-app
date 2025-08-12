@@ -39,12 +39,23 @@ def admin_get_applicants():
                             
                             # Try to load corresponding evaluation file
                             eval_filename = f"temp_evaluation_{temp_data.get('sessionId')}.json"  # Generate evaluation filename
-                            eval_filepath = os.path.join(data_dir, eval_filename)  # Create full evaluation file path
+                            eval_filepath = os.path.join(data_dir, eval_filename)
                             if os.path.exists(eval_filepath):  # Check if evaluation file exists
                                 try:
                                     with open(eval_filepath, 'r') as eval_f:  # Open evaluation file
                                         eval_data = json.load(eval_f)  # Load evaluation JSON data
-                                        applicant_entry["evaluations"] = eval_data.get("evaluations", [])  # Extract evaluations list
+                                        # Handle both old and new segmented structure
+                                        if "evaluations" in eval_data:
+                                            # Old format - migrate to new structure
+                                            applicant_entry["evaluations"] = eval_data.get("evaluations", [])
+                                        else:
+                                            # New segmented format - combine all sections
+                                            all_evaluations = []
+                                            all_evaluations.extend(eval_data.get("speech_eval", []))
+                                            all_evaluations.extend(eval_data.get("listening_test", []))
+                                            all_evaluations.extend(eval_data.get("written_test", []))
+                                            all_evaluations.extend(eval_data.get("typing_test", []))
+                                            applicant_entry["evaluations"] = all_evaluations
                                 except Exception as eval_err:  # Handle evaluation file loading errors
                                     print(f"Error loading evaluation file {eval_filename}: {eval_err}")
                             

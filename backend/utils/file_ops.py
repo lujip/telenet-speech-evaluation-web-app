@@ -101,11 +101,36 @@ def load_temp_applicant(session_id):
     return None
 
 def save_temp_evaluation(evaluation_data, session_id):
-    """Store evaluation data temporarily"""
+    """Store evaluation data temporarily with segmented structure"""
     ensure_data_directory()  # Ensure data directory exists
     temp_file = f"data/temp_evaluation_{session_id}.json"  # Create temp filename with session ID
+    
+    # Load existing data to preserve structure
+    existing_data = load_temp_evaluation(session_id)
+    if existing_data:
+        # Merge with existing data, preserving segmented structure
+        for section in ['speech_eval', 'listening_test', 'written_test', 'typing_test']:
+            if section in evaluation_data:
+                existing_data[section] = evaluation_data[section]
+    else:
+        # Create new segmented structure
+        existing_data = {
+            "speech_eval": [],
+            "listening_test": [],
+            "written_test": [],
+            "typing_test": []
+        }
+        # If evaluation_data has the old format, migrate it
+        if "evaluations" in evaluation_data:
+            existing_data["speech_eval"] = evaluation_data["evaluations"]
+        else:
+            # Merge new sections
+            for section in ['speech_eval', 'listening_test', 'written_test', 'typing_test']:
+                if section in evaluation_data:
+                    existing_data[section] = evaluation_data[section]
+    
     with open(temp_file, 'w') as f:
-        json.dump(evaluation_data, f, indent=2)  # Save evaluation data to temporary file
+        json.dump(existing_data, f, indent=2)  # Save evaluation data to temporary file
 
 def load_temp_evaluation(session_id):
     """Load temporary evaluation data"""

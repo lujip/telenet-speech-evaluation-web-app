@@ -48,11 +48,26 @@ def finish_evaluation():
                     "id": session_id,  # Use session ID as unique identifier
                     "applicant_info": applicant_data.get('applicant', {}),  # Extract applicant details
                     "application_timestamp": applicant_data.get('timestamp'),  # Get application time
-                    "evaluations": evaluation_data.get('evaluations', []),  # Get all evaluation results
-                    "total_questions": len(evaluation_data.get('evaluations', [])),  # Count total questions
+                    "evaluations": [],  # Initialize empty evaluations list
+                    "total_questions": 0,  # Will calculate total from all sections
                     "completion_timestamp": datetime.now().isoformat(),  # Record completion time
                     "last_updated": datetime.now().isoformat()  # Update timestamp
                 }
+                
+                # Handle both old and new segmented structure
+                if "evaluations" in evaluation_data:
+                    # Old format - use directly
+                    combined_record["evaluations"] = evaluation_data.get("evaluations", [])
+                    combined_record["total_questions"] = len(evaluation_data.get("evaluations", []))
+                else:
+                    # New segmented format - combine all sections
+                    all_evaluations = []
+                    all_evaluations.extend(evaluation_data.get("speech_eval", []))
+                    all_evaluations.extend(evaluation_data.get("listening_test", []))
+                    all_evaluations.extend(evaluation_data.get("written_test", []))
+                    all_evaluations.extend(evaluation_data.get("typing_test", []))
+                    combined_record["evaluations"] = all_evaluations
+                    combined_record["total_questions"] = len(all_evaluations)
 
                 # Check if applicant already exists (by session_id)
                 existing_index = None  # Track if applicant exists
@@ -74,7 +89,15 @@ def finish_evaluation():
                 # Clean up temporary files
                 cleanup_temp_files(session_id)  # Remove temporary files
 
-                print(f"Completed evaluation for applicant {session_id} with {len(evaluation_data.get('evaluations', []))} questions")
+                print(f"Completed evaluation for applicant {session_id}")
+                if "evaluations" in evaluation_data:
+                    print(f"  - Total evaluations: {len(evaluation_data.get('evaluations', []))}")
+                else:
+                    print(f"  - Speech evaluations: {len(evaluation_data.get('speech_eval', []))}")
+                    print(f"  - Listening tests: {len(evaluation_data.get('listening_test', []))}")
+                    print(f"  - Written tests: {len(evaluation_data.get('written_test', []))}")
+                    print(f"  - Typing tests: {len(evaluation_data.get('typing_test', []))}")
+                    print(f"  - Total: {combined_record['total_questions']}")
 
         # Clear session state for this session
         clear_session(session_id)  # Clean up session memory
