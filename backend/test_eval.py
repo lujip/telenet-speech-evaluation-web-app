@@ -259,6 +259,39 @@ def transcribe_audio_deepgram(audio_path):
         }
     return asyncio.run(transcribe_async())
 
+
+# ------------------ 3.3b. Transcribe Audio (USING OPENAI WHISPER API) ------------------ #
+import requests
+
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")  # Load from .env
+
+def transcribe_audio_whisper(audio_path):
+    """
+    Transcribe audio using OpenAI Whisper API.
+    Returns a dict with 'transcript' and 'words' (if available).
+    """
+    api_url = "https://api.openai.com/v1/audio/transcriptions"
+    headers = {
+        "Authorization": f"Bearer {OPENAI_API_KEY}"
+    }
+    with open(audio_path, "rb") as audio_file:
+        files = {
+            "file": audio_file
+        }
+        data = {
+            "model": "whisper-1",
+            "response_format": "text"
+            # You can add "language": "en" or "tl" if you want to force a language, but for code-switching, leave it out.
+        }
+        response = requests.post(api_url, headers=headers, files=files, data=data)
+        response.raise_for_status()
+        transcript = response.text.strip()
+    return {
+        "transcript": transcript,
+        "words": None  # Whisper API does not return word-level timing in text mode
+    }
+
+    
 # ------------------ 4. Grammar Check ------------------ #
 tool = language_tool_python.LanguageTool('en-US')
 
