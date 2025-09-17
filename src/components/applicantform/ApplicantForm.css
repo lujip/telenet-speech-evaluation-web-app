@@ -1,8 +1,8 @@
 /* Form Container Styles */
 .form-container {
-  max-width: 800px;
+  max-width: 1000px;
   margin: 0 auto;
-  padding: 2rem;
+  padding: 1rem;
   background: #ffffff;
   border-radius: 12px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
@@ -11,7 +11,7 @@
 .form-container h2 {
   color: #2c3e50;
   text-align: center;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.25rem;
   font-size: 2.2rem;
   font-weight: 600;
 }
@@ -19,15 +19,15 @@
 .form-description {
   text-align: center;
   color: #7f8c8d;
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem;
   font-size: 1.1rem;
   line-height: 1.6;
 }
 
 /* Form Sections */
 .form-section {
-  margin-bottom: 2.5rem;
-  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  padding: 1rem;
   background: #f8f9fa;
   border-radius: 8px;
   border-left: 4px solid #3498db;
@@ -35,50 +35,113 @@
 
 .form-section h3 {
   color: #2c3e50;
-  margin-bottom: 1.5rem;
-  font-size: 1.3rem;
+  margin-bottom: 1rem;
+  font-size: 1.4rem;
   font-weight: 600;
+}
+
+/* Form Rows for side-by-side inputs */
+.form-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
 }
 
 /* Form Groups */
 .form-group {
-  margin-bottom: 1.5rem;
+  margin-bottom: 0.75rem;
 }
 
 .form-group label {
   display: block;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.25rem;
   color: #2c3e50;
   font-weight: 500;
   font-size: 0.95rem;
 }
 
 .form-group input,
-.form-group select {
+.form-group select,
+.form-group textarea {
   width: 100%;
-  padding: 0.75rem 1rem;
+  padding: 0.5rem 0.75rem;
   border: 2px solid #e1e8ed;
   border-radius: 6px;
   font-size: 1rem;
   transition: all 0.3s ease;
   background: #ffffff;
+  box-sizing: border-box;
+}
+
+.form-group textarea {
+  resize: vertical;
+  min-height: 80px;
+  font-family: inherit;
 }
 
 .form-group input:focus,
-.form-group select:focus {
+.form-group select:focus,
+.form-group textarea:focus {
   outline: none;
   border-color: #3498db;
   box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
 }
 
 .form-group input.error,
-.form-group select.error {
+.form-group select.error,
+.form-group textarea.error {
   border-color: #e74c3c;
   box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.1);
 }
 
-.form-group input::placeholder {
+.form-group input::placeholder,
+.form-group textarea::placeholder {
   color: #bdc3c7;
+}
+
+/* Education Subsections */
+.education-subsection {
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  background: #ffffff;
+  border-radius: 6px;
+  border: 1px solid #e1e8ed;
+}
+
+.education-subsection h4 {
+  color: #34495e;
+  margin-bottom: 0.75rem;
+  font-size: 1.1rem;
+  font-weight: 500;
+  border-bottom: 1px solid #e1e8ed;
+  padding-bottom: 0.5rem;
+}
+
+/* Work History Styles */
+.work-history-item {
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  background: #ffffff;
+  border-radius: 6px;
+  border: 1px solid #e1e8ed;
+  position: relative;
+}
+
+.work-history-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  border-bottom: 1px solid #e1e8ed;
+  padding-bottom: 0.5rem;
+}
+
+.work-history-header h4 {
+  color: #34495e;
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 500;
 }
 
 /* Error Messages */
@@ -93,7 +156,7 @@
 .form-actions {
   text-align: center;
   margin-top: 2rem;
-  padding-top: 2rem;
+  padding-top: 1.5rem;
   border-top: 1px solid #e1e8ed;
 }
 
@@ -145,10 +208,38 @@
   box-shadow: 0 4px 12px rgba(149, 165, 166, 0.3);
 }
 
+.btn-add-company {
+  background: linear-gradient(135deg, #f39c12, #e67e22);
+  color: white;
+  margin-top: 1rem;
+  padding: 0.75rem 1.5rem;
+  font-size: 0.95rem;
+}
+
+.btn-add-company:hover {
+  background: linear-gradient(135deg, #e67e22, #d35400);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(243, 156, 18, 0.3);
+}
+
+.btn-remove {
+  background: linear-gradient(135deg, #e74c3c, #c0392b);
+  color: white;
+  padding: 0.5rem 1rem;
+  font-size: 0.85rem;
+  min-width: auto;
+}
+
+.btn-remove:hover {
+  background: linear-gradient(135deg, #c0392b, #a93226);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(231, 76, 60, 0.3);
+}
+
 /* Success Container */
 .success-container {
   text-align: center;
-  padding: 3rem 2rem;
+  padding: 1.5rem 1rem;
   background: #ffffff;
   border-radius: 12px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
@@ -170,39 +261,39 @@
 
 .success-container h2 {
   color: #27ae60;
-  margin-bottom: 1rem;
+  margin-bottom: 0.5rem;
   font-size: 2rem;
 }
 
 .success-container p {
   color: #7f8c8d;
   font-size: 1.1rem;
-  margin-bottom: 2rem;
+  margin-bottom: 1rem;
 }
 
 .applicant-summary {
   background: #f8f9fa;
-  padding: 1.5rem;
+  padding: 1rem;
   border-radius: 8px;
-  margin: 2rem 0;
+  margin: 1rem 0;
   text-align: left;
   border-left: 4px solid #27ae60;
 }
 
 .applicant-summary h3 {
   color: #2c3e50;
-  margin-bottom: 1rem;
+  margin-bottom: 0.5rem;
   font-size: 1.2rem;
 }
 
 .applicant-summary p {
-  margin: 0.5rem 0;
+  margin: 0.25rem 0;
   color: #34495e;
   font-size: 1rem;
 }
 
 .action-buttons {
-  margin-top: 2rem;
+  margin-top: 1rem;
 }
 
 /* Responsive Design */
@@ -210,6 +301,7 @@
   .form-container {
     padding: 1rem;
     margin: 0 1rem;
+    max-width: 95%;
   }
   
   .form-container h2 {
@@ -218,6 +310,17 @@
   
   .form-section {
     padding: 1rem;
+  }
+  
+  .form-row {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+  }
+  
+  .work-history-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
   }
   
   .btn {
@@ -243,6 +346,11 @@
   
   .form-description {
     font-size: 1rem;
+  }
+  
+  .education-subsection,
+  .work-history-item {
+    padding: 0.75rem;
   }
 }
 

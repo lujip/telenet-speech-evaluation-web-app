@@ -279,7 +279,7 @@ const TechTest = () => {
   // Start evaluation
   const startEvaluation = () => {
     if (allTestsPassed) {
-      navigate('/app');
+      navigate('/testing');
     }
   };
 

@@ -14,7 +14,7 @@ const LandingPage = () => {
   };
 
   const handleContinue = () => {
-      navigate('/app');
+      navigate('/testing');
   };
 
   const handleStartNew = () => {
@@ -28,42 +28,75 @@ const LandingPage = () => {
       <div className="box-container">
         {/* Hero Section */}
         <section className="hero-section">
-          <h1>Welcome to the Tele-net Evaluation Test</h1>
+          <h1>Welcome to the Tele-net Comprehensive Evaluation</h1>
           <p>
-          This short speaking assessment helps us evaluate your communication skills for a potential role in our call center team. 
-          You'll be asked a few job-related questions and will respond using your microphone.
+          This comprehensive assessment evaluates your skills across multiple areas for a potential role in our call center team. 
+          You'll complete four different types of tests: listening comprehension, written communication, speech evaluation, and typing skills.
           </p>
+        </section>
+
+        {/* Test Overview */}
+        <section className="test-overview-section">
+          <h2>Evaluation Components</h2>
+          <div className="test-grid">
+            <div className="test-item">
+              <div className="test-icon">🎧</div>
+              <h3>Listening Test</h3>
+              <p>Answer multiple-choice questions based on audio scenarios</p>
+            </div>
+            <div className="test-item">
+              <div className="test-icon">📝</div>
+              <h3>Written Test</h3>
+              <p>Respond to written questions demonstrating your communication skills</p>
+            </div>
+            <div className="test-item">
+              <div className="test-icon">🗣️</div>
+              <h3>Speech Evaluation</h3>
+              <p>Record verbal responses to interview questions (30-60 seconds each)</p>
+            </div>
+            <div className="test-item">
+              <div className="test-icon">⌨️</div>
+              <h3>Typing Test</h3>
+              <p>Complete a 60-second typing test to measure speed and accuracy</p>
+            </div>
+          </div>
         </section>
 
         {/* What to Expect */}
         <section className="expect-section">
           <h2>What to Expect</h2>
           <ul>
-            <li>Short interview questions</li>
-            <li>Each response should be spoken within 30–60 seconds</li>
-            <li>Instant feedback and score based on your speech</li>
-            <li>No need to repeat questions - just answer naturally</li>
+            <li><strong>Listening Test:</strong> Multiple-choice questions based on customer service scenarios</li>
+            <li><strong>Written Test:</strong> Professional written responses to job-related questions</li>
+            <li><strong>Speech Evaluation:</strong> 5-6 interview questions with 30-60 second responses</li>
+            <li><strong>Typing Test:</strong> 60-second speed and accuracy assessment</li>
+            <li><strong>Instant Feedback:</strong> Real-time scores and detailed evaluation for each component</li>
+            <li><strong>Progress Tracking:</strong> Visual progress indicator throughout the evaluation</li>
+            <li><strong>Flexible Timing:</strong> Complete at your own pace with the ability to pause and resume</li>
           </ul>
         </section>
 
-        {/* Mic Setup & Instructions */}
+        {/* Technical Requirements & Instructions 
         <section className="mic-setup-section">
-          <h2>Mic Setup & Instructions</h2>
+          <h2>Technical Requirements & Instructions</h2>
           <ol>
-            <li>Use a quiet environment with minimal background noise</li>
-            <li>Ensure your microphone is working</li>
-            <li>Speak clearly and naturally - just like in a real interview</li>
-            <li>Grant browser permission to access your microphone when prompted</li>
-            <li>You can use the listen test to test your microphone before starting the evaluation</li>
+            <li><strong>Environment:</strong> Use a quiet space with minimal background noise</li>
+            <li><strong>Microphone:</strong> Ensure your microphone is working and grant browser permissions when prompted</li>
+            <li><strong>Audio Playback:</strong> Make sure your speakers/headphones work for the listening test</li>
+            <li><strong>Internet Connection:</strong> Stable connection required for all test components</li>
+            <li><strong>Browser Compatibility:</strong> Use a modern browser (Chrome, Firefox, Safari, or Edge)</li>
+            <li><strong>Device Requirements:</strong> Computer or tablet recommended for optimal experience</li>
+            <li><strong>Test Your Setup:</strong> Use the microphone test feature before starting the evaluation</li>
           </ol>
         </section>
+        */}
 
         {/* Start Button (CTA) */}
         <div className="cta-section">
           {applicantInfo && sessionId ? (
             <div style={{ textAlign: 'center' }}>
               <p style={{ marginBottom: '1rem', color: '#4a5568' }}>
-                Welcome back, <strong>{applicantInfo.fullName}</strong>! 
+                Welcome back, <strong>{applicantInfo.firstName} {applicantInfo.lastName}</strong>! 
                 You have an evaluation in progress.
               </p>
               <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>

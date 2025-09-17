@@ -7,16 +7,17 @@
 
 .test-header {
   text-align: center;
-  margin-bottom: 30px;
   padding: 20px;
+  margin-bottom: 0;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
-  border-radius: 12px;
+  border-top-left-radius: 12px;
+  border-top-right-radius: 12px;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
 }
 
 .test-header h2 {
-  margin: 0 0 15px 0;
+  margin: 0 15px 15px 15px;
   font-size: 28px;
   font-weight: 600;
 }
@@ -24,7 +25,7 @@
 .test-info {
   display: flex;
   justify-content: center;
-  gap: 20px;
+  gap: 10px;
   flex-wrap: wrap;
 }
 
@@ -34,14 +35,16 @@
   border-radius: 20px;
   font-size: 14px;
   font-weight: 500;
+  
 }
 
 .test-instructions {
   text-align: center;
   padding: 30px;
   background: #f8f9fa;
-  border-radius: 12px;
   margin-bottom: 30px;
+  border-bottom-left-radius: 12px;
+  border-bottom-right-radius: 12px;
 }
 
 .test-instructions p {
@@ -49,6 +52,7 @@
   color: #555;
   font-size: 16px;
   line-height: 1.6;
+  margin-bottom: 10px;
 }
 
 .start-btn {
@@ -61,7 +65,7 @@
   border-radius: 25px;
   cursor: pointer;
   transition: all 0.3s ease;
-  margin-top: 20px;
+  margin-top: 40px;
 }
 
 .start-btn:hover {
@@ -71,9 +75,10 @@
 
 .test-active {
   background: white;
-  border-radius: 12px;
   padding: 30px;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  border-bottom-left-radius: 12px;
+  border-bottom-right-radius: 12px;
 }
 
 .timer {
@@ -109,7 +114,7 @@
 }
 
 .typing-input {
-  width: 100%;
+  width: 95%;
   min-height: 120px;
   padding: 20px;
   border: 2px solid #e1e5e9;
@@ -150,6 +155,34 @@
   font-weight: 600;
   color: #495057;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.test-controls {
+  text-align: center;
+  margin-top: 20px;
+}
+
+.complete-btn {
+  background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
+  color: white;
+  border: none;
+  padding: 12px 30px;
+  font-size: 16px;
+  font-weight: 600;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.complete-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+}
+
+.complete-btn:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+  transform: none;
 }
 
 .test-results {

@@ -6,7 +6,7 @@ import EvaluationPage from './components/evaluationpage/EvaluationPage.jsx';
 const App = () => {
   return (
     <div>
-      <Header/>
+      <Header />
       <EvaluationPage />
     </div>
   );

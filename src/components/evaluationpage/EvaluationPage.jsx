@@ -1,17 +1,15 @@
 import React, { useEffect, useState, useRef } from 'react';
 import './EvaluationPage.css';
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
 import { useSession } from '../../contexts/SessionContext.jsx';
-import TypingTest from '../typingtest/TypingTest.jsx';
 
-const EvaluationPage = () => {
+const EvaluationPage = ({ onComplete, onNext }) => {
   console.log("EvaluationPage component mounted");
-  const navigate = useNavigate();
-  const { applicantInfo, sessionId, startEvaluation, clearSession } = useSession();
+  const { applicantInfo, sessionId } = useSession();
   
   const [question, setQuestion] = useState('');
   const [questionKeywords, setQuestionKeywords] = useState([]);
+  const [currentAudioId, setCurrentAudioId] = useState('');
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
   const [recording, setRecording] = useState(false);
@@ -19,12 +17,11 @@ const EvaluationPage = () => {
   const [totalQuestions, setTotalQuestions] = useState(0);
   const [timeLeft, setTimeLeft] = useState(60);
   const [hasAnswered, setHasAnswered] = useState(false);
-  const [showTypingTest, setShowTypingTest] = useState(false);
-  const [typingTestCompleted, setTypingTestCompleted] = useState(false);
-  const [typingResults, setTypingResults] = useState(null);
-  const mediaRecorderRef = useRef(null);
-  const audioChunksRef = useRef([]);
-  const [audioUrl, setAudioUrl] = useState(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [audioElement, setAudioElement] = useState(null);
+  // Add overall session timer (15 minutes)
+  const [sessionTimeLeft, setSessionTimeLeft] = useState(900); // 15 minutes in seconds
+  const [isSessionStarted, setIsSessionStarted] = useState(false);
   const canvasRef = useRef(null);
   const animationRef = useRef(null);
   const audioContextRef = useRef(null);
@@ -33,12 +30,15 @@ const EvaluationPage = () => {
   const sourceRef = useRef(null);
   const streamRef = useRef(null);
   const timerRef = useRef(null);
+  const mediaRecorderRef = useRef(null);
+  const audioChunksRef = useRef([]);
   const [sessionStats, setSessionStats] = useState({
     questionsAnswered: 0,
     totalRecordingTime: 0,
     averageScore: 0
   });
   const [hasSpokenInitialQuestion, setHasSpokenInitialQuestion] = useState(false);
+  const API_URL = import.meta.env.VITE_API_URL;
 
   // Reset evaluation state when component mounts (new session)
   useEffect(() => {
@@ -46,37 +46,46 @@ const EvaluationPage = () => {
       // Check current session state from backend
       checkSessionState();
       setHasSpokenInitialQuestion(true);
+      // Start session timer
+      setIsSessionStarted(true);
     }
   }, [applicantInfo, sessionId]);
+
+  // Session timer countdown effect
+  useEffect(() => {
+    let sessionTimer;
+    if (isSessionStarted && sessionTimeLeft > 0) {
+      sessionTimer = setInterval(() => {
+        setSessionTimeLeft(prev => {
+          if (prev <= 1) {
+            handleSessionTimeUp();
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    }
+    return () => clearInterval(sessionTimer);
+  }, [isSessionStarted, sessionTimeLeft]);
 
   // Check current session state from backend
   const checkSessionState = async () => {
     try {
       // Get current question and count for this session
       const [questionRes, countRes] = await Promise.all([
-        axios.get(`http://localhost:5000/question?session_id=${sessionId}`),
-        axios.get(`http://localhost:5000/question_count?session_id=${sessionId}`)
+        axios.get(`${API_URL}/question?session_id=${sessionId}`),
+        axios.get(`${API_URL}/question_count?session_id=${sessionId}`)
       ]);
       
       setQuestion(questionRes.data.text);
       setQuestionKeywords(questionRes.data.keywords || []);
+      setCurrentAudioId(questionRes.data.audio_id || '');
       setTotalQuestions(countRes.data.total);
       setCurrentQuestionIndex(countRes.data.current);
       
       // Check if current question has been answered
-      const statusRes = await axios.get(`http://localhost:5000/question_status?session_id=${sessionId}`);
+      const statusRes = await axios.get(`${API_URL}/question_status?session_id=${sessionId}`);
       setHasAnswered(statusRes.data.has_answered);
-      
-      // Speak the current question if it exists
-      if (questionRes.data.text) {
-        try {
-          await axios.post("http://localhost:5000/speak", {
-            text: questionRes.data.text
-          });
-        } catch (speakErr) {
-          console.error("Error speaking question:", speakErr);
-        }
-      }
     } catch (err) {
       console.error("Error checking session state:", err);
       // Fallback to reset if session state check fails
@@ -88,7 +97,17 @@ const EvaluationPage = () => {
   useEffect(() => {
     console.log ("Second Use effect");
     setHasSpokenInitialQuestion(false);
-  }, [sessionId]); 
+  }, [sessionId]);
+
+  // Cleanup audio element when component unmounts
+  useEffect(() => {
+    return () => {
+      if (audioElement) {
+        audioElement.pause();
+        setAudioElement(null);
+      }
+    };
+  }, [audioElement]); 
 
   // Timer effect for countdown
   useEffect(() => {
@@ -125,7 +144,7 @@ const EvaluationPage = () => {
     console.log("resetAndFetchQuestions called");
     try {
       // Reset questions on backend
-      const resetRes = await axios.post("http://localhost:5000/reset_questions", {
+      const resetRes = await axios.post(`${API_URL}/reset_questions`, {
         session_id: sessionId
       });
       
@@ -133,22 +152,12 @@ const EvaluationPage = () => {
         // Use the question from reset response
         setQuestion(resetRes.data.question.text);
         setQuestionKeywords(resetRes.data.question.keywords || []);
+        setCurrentAudioId(resetRes.data.question.audio_id || '');
         
         // Fetch question count
-        const countRes = await axios.get(`http://localhost:5000/question_count?session_id=${sessionId}`);
+        const countRes = await axios.get(`${API_URL}/question_count?session_id=${sessionId}`);
         setTotalQuestions(countRes.data.total);
-        setCurrentQuestionIndex(countRes.data.current);
-        
-        // Speak the first question
-        if (resetRes.data.question.text) {
-          try {
-            await axios.post("http://localhost:5000/speak", {
-              text: resetRes.data.question.text
-            });
-          } catch (speakErr) {
-            console.error("Error speaking question:", speakErr);
-          }
-        } 
+        setCurrentQuestionIndex(countRes.data.current); 
       } else {
         // Fallback to fetching questions separately
         await fetchQuestionAndCount();
@@ -163,24 +172,14 @@ const EvaluationPage = () => {
   const fetchQuestionAndCount = async () => {
     try {
       const [questionRes, countRes] = await Promise.all([
-        axios.get(`http://localhost:5000/question?session_id=${sessionId}`),
-        axios.get(`http://localhost:5000/question_count?session_id=${sessionId}`)
+        axios.get(`${API_URL}/question?session_id=${sessionId}`),
+        axios.get(`${API_URL}/question_count?session_id=${sessionId}`)
       ]);
       setQuestion(questionRes.data.text);
       setQuestionKeywords(questionRes.data.keywords || []);
+      setCurrentAudioId(questionRes.data.audio_id || '');
       setTotalQuestions(countRes.data.total);
       setCurrentQuestionIndex(countRes.data.current);
-      
-      // Speak the question
-      if (questionRes.data.text) {
-        try {
-          await axios.post("http://localhost:5000/speak", {
-            text: questionRes.data.text
-          });
-        } catch (speakErr) {
-          console.error("Error speaking question:", speakErr);
-        }
-      }
     } catch (err) {
       console.error("Error fetching question data:", err);
     }
@@ -219,12 +218,11 @@ const EvaluationPage = () => {
   const startRecording = async () => {
     setResult(null);
     setRecording(true);
-    setAudioUrl(null);
     setHasAnswered(true);
     
     // Mark current question as answered in backend
     try {
-      await axios.post("http://localhost:5000/mark_answered", {
+      await axios.post(`${API_URL}/mark_answered`, {
         session_id: sessionId,
         question_index: currentQuestionIndex
       });
@@ -279,7 +277,6 @@ const EvaluationPage = () => {
   const handleStop = async () => {
     setLoading(true);
     const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/wav' });
-    setAudioUrl(URL.createObjectURL(audioBlob));
     const formData = new FormData();
     formData.append('question', question);
     questionKeywords.forEach(k => formData.append('keywords', k));
@@ -292,7 +289,7 @@ const EvaluationPage = () => {
     }
     
     try {
-      const res = await axios.post("http://localhost:5000/evaluate", formData, {
+      const res = await axios.post(`${API_URL}/evaluate`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
       setResult(res.data);
@@ -309,27 +306,59 @@ const EvaluationPage = () => {
     setLoading(false);
   };
 
-  const handleTypingTestComplete = (results) => {
-    setTypingResults(results);
-    setTypingTestCompleted(true);
-    setShowTypingTest(false);
-  };
-
-  const handleFinishEvaluation = async () => {
+  // Audio playback functions
+  const playQuestion = async () => {
+    if (!currentAudioId) return;
+    
     try {
-      if (sessionId) {
-        const requestData = { session_id: sessionId };
-        await axios.post("http://localhost:5000/finish_evaluation", requestData);
+      setIsPlaying(true);
+      
+      // Get the audio URL from the backend
+      const response = await axios.post(`${API_URL}/speak-audio`, {
+        id: currentAudioId
+      });
+      
+      if (response.data.success && response.data.audio_url) {
+        // Create full URL
+        const fullAudioUrl = `${API_URL}${response.data.audio_url}`;
+        
+        // Create and play audio element
+        const audio = new Audio(fullAudioUrl);
+        setAudioElement(audio);
+        
+        // Set up event listeners
+        audio.onended = () => {
+          setIsPlaying(false);
+          setAudioElement(null);
+        };
+        
+        audio.onerror = () => {
+          setResult({ success: false, message: 'Failed to play audio file. Please try again.' });
+          setIsPlaying(false);
+          setAudioElement(null);
+        };
+        
+        // Play the audio
+        await audio.play();
+        
+      } else {
+        throw new Error(response.data.message || 'Failed to get audio URL');
       }
       
-      // Clear session data
-      clearSession();
-      
-      // Navigate to a completion page or back to landing
-      navigate('/');
     } catch (err) {
-      alert("Error finishing evaluation: " + err.message);
+      console.error('Error playing question audio:', err);
+      setResult({ success: false, message: 'Failed to play question audio. Please try again.' });
+      setIsPlaying(false);
     }
+  };
+
+  const stopAudio = () => {
+    if (audioElement) {
+      audioElement.pause();
+      audioElement.currentTime = 0;
+      setAudioElement(null);
+    }
+    setIsPlaying(false);
   };
 
   // Format time display
@@ -346,95 +375,160 @@ const EvaluationPage = () => {
     return '#ef4444'; // Red
   };
 
-  // Show applicant info in the sidebar
-  const renderApplicantInfo = () => {
-    if (!applicantInfo) return null;
+  // Get session timer color based on time left
+  const getSessionTimerColor = () => {
+    if (sessionTimeLeft > 300) return '#10b981'; // Green (>5 mins)
+    if (sessionTimeLeft > 120) return '#f59e0b'; // Orange (>2 mins)
+    return '#ef4444'; // Red (<=2 mins)
+  };
+
+  // Handle session time up
+  const handleSessionTimeUp = () => {
+    console.log('Session time is up! Auto-completing evaluation...');
     
+    // Stop any ongoing recording
+    if (recording) {
+      stopRecording();
+    }
+    
+    // Stop any playing audio
+    if (audioElement) {
+      audioElement.pause();
+      setAudioElement(null);
+    }
+    setIsPlaying(false);
+    
+    // Complete the evaluation automatically
+    if (onComplete) {
+      onComplete({
+        testType: 'speech',
+        score: sessionStats.averageScore,
+        totalQuestions: totalQuestions,
+        questionsAnswered: sessionStats.questionsAnswered,
+        timeUp: true
+      });
+    }
+    
+    if (onNext) {
+      onNext();
+    }
+  };
+
+  // Show speech evaluation instructions in the sidebar
+  const renderSpeechInstructions = () => {
     return (
       <div className="stats-card">
-        <h3>👤 Applicant Info</h3>
-        <div className="stat-item">
-          <span className="stat-label">Name</span>
-          <span className="stat-value">{applicantInfo.fullName}</span>
-        </div>
-        <div className="stat-item">
-          <span className="stat-label">Role</span>
-          <span className="stat-value">{applicantInfo.role}</span>
-        </div>
-        <div className="stat-item">
-          <span className="stat-label">Email</span>
-          <span className="stat-value">{applicantInfo.email}</span>
-        </div>
-        {applicantInfo.phone && (
-          <div className="stat-item">
-            <span className="stat-label">Phone</span>
-            <span className="stat-value">{applicantInfo.phone}</span>
+        <h3>🎤 Speech Evaluation Instructions</h3>
+        <div className="instruction-content">
+          <div className="instruction-item">
+            <h4>📋 How to Answer</h4>
+            <p>1. Click "Play Question" to hear the question</p>
+            <p>2. Think about your response</p>
+            <p>3. Click "Start Answering" to record</p>
+            <p>4. Speak clearly and confidently</p>
+            <p>5. Click "Stop Recording" when done</p>
           </div>
-        )}
-        {applicantInfo.experience && (
-          <div className="stat-item">
-            <span className="stat-label">Experience</span>
-            <span className="stat-value">{applicantInfo.experience}</span>
+          
+          <div className="instruction-item">
+            <h4>⏱️ Time Limits</h4>
+            <p>• Maximum recording time: 60 seconds</p>
+            <p>• Take your time to think before recording</p>
+            <p>• Recording stops automatically at 60 seconds</p>
+            <p>• Total session time: 15 minutes</p>
+            <p>• Session will auto-complete when time runs out</p>
           </div>
-        )}
+          
+          <div className="instruction-item">
+            <h4>💡 Tips for Success</h4>
+            <p>• Speak slowly and clearly</p>
+            <p>• Use complete sentences</p>
+            <p>• Stay calm and confident</p>
+            <p>• Answer the question completely</p>
+          </div>
+        </div>
       </div>
     );
   };
-
-  // Show typing test results
-  const renderTypingResults = () => {
-    if (!typingResults) return null;
-    
-    return (
-      <div className="stats-card">
-        <h3>⌨️ Typing Test Results</h3>
-        <div className="stat-item">
-          <span className="stat-label">WPM</span>
-          <span className="stat-value">{typingResults.wpm}</span>
-        </div>
-        <div className="stat-item">
-          <span className="stat-label">Accuracy</span>
-          <span className="stat-value">{typingResults.accuracy}%</span>
-        </div>
-        <div className="stat-item">
-          <span className="stat-label">Words Typed</span>
-          <span className="stat-value">{typingResults.wordsTyped}</span>
-        </div>
-      </div>
-    );
-  };
-
-  // If showing typing test, render only that
-  if (showTypingTest) {
-    return (
-      <div className="main-content-vertical">
-        <div className="box-container">
-          <h1 className="speech-title">Typing Test</h1>
-          <p className="typing-intro">
-            Great job on the speech evaluation! Now let's test your typing skills. 
-            You'll have 60 seconds to type the text as accurately as possible.
-          </p>
-          <TypingTest 
-            sessionId={sessionId}
-            onComplete={handleTypingTestComplete}
-          />
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="main-content-vertical">
+
+      {/* Sidebar */}
+      <div className="sidebar">
+        {renderSpeechInstructions()}
+        
+        {/*<div className="stats-card">
+          <h3>📊 Session Progress</h3>
+          <div className="stat-item">
+            <span className="stat-label">Questions</span>
+            <span className="stat-value">{currentQuestionIndex + 1} / {totalQuestions}</span>
+          </div>
+          <div className="stat-item">
+            <span className="stat-label">Answered</span>
+            <span className="stat-value">{sessionStats.questionsAnswered}</span>
+          </div>
+          <div className="stat-item">
+            <span className="stat-label">Total Time</span>
+            <span className="stat-value">{Math.round(sessionStats.totalRecordingTime)}s</span>
+          </div>
+          {sessionStats.averageScore > 0 && (
+            <div className="stat-item">
+              <span className="stat-label">Avg Score</span>
+              <span className="stat-value">{sessionStats.averageScore}</span>
+            </div>
+          )}
+        </div>*/}
+
+      </div>
       {/* Main Content */}
       <div className="box-container" style={{ position: 'relative' }}>
         <h1 className="speech-title">Tele-net Speech Evaluation</h1>
+        
+        {/* Session Timer Header */}
+        <div className="test-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', padding: '10px 0', borderBottom: '2px solid #e0e0e0' }}>
+          <div className="test-info">
+            <span style={{ 
+              fontSize: '16px', 
+              fontWeight: 'bold', 
+              color: 'white',
+              border: `3px solid ${getSessionTimerColor()}`, 
+              borderRadius: '8px', 
+              padding: '8px 16px', 
+              display: 'flex', 
+              justifyContent: 'flex-end', 
+              maxWidth: '200px'
+              }
+              }>Time Left: {formatTime(sessionTimeLeft)}</span>
+          </div>
+          <div className="session-timer">
+          </div>
+        </div>
         
         <div className="question-section">
           <div className="question-counter">
             Question {currentQuestionIndex + 1} of {totalQuestions}
           </div>
-          <h2>Current Question:</h2>
+        {/*  <h2>Current Question:</h2>
           <p>{question || "Loading question..."}</p>
+          */}
+          <div className="audio-controls">
+            <button 
+              onClick={playQuestion} 
+              disabled={isPlaying || !currentAudioId}
+              className="play-button"
+            >
+              {isPlaying ? '🔊 Playing...' : '🔊 Play Question'}
+            </button>
+            
+            {isPlaying && (
+              <button 
+                onClick={stopAudio}
+                className="stop-audio-button"
+              >
+                ⏹️ Stop Audio
+              </button>
+            )}
+          </div>
           
           <div className="question-buttons">
             <button 
@@ -454,15 +548,22 @@ const EvaluationPage = () => {
               <button
                 onClick={async () => {
                   try {
-                    const res = await axios.post("http://localhost:5000/next_question", {
+                    const res = await axios.post(`${API_URL}/next_question`, {
                       session_id: sessionId
                     });
                     if (res.data.success) {
+                      // Stop any currently playing audio
+                      if (audioElement) {
+                        audioElement.pause();
+                        setAudioElement(null);
+                      }
+                      setIsPlaying(false);
+                      
                       setQuestion(res.data.question.text);
                       setQuestionKeywords(res.data.question.keywords || []);
+                      setCurrentAudioId(res.data.question.audio_id || '');
                       setCurrentQuestionIndex(res.data.currentIndex);
                       setResult(null);
-                      setAudioUrl(null);
                       setTimeLeft(60);
                       setHasAnswered(false);
                     } else {
@@ -479,11 +580,26 @@ const EvaluationPage = () => {
               </button>
             ) : (
               <button
-                onClick={() => setShowTypingTest(true)}
+                onClick={() => {
+                  // Complete speech evaluation and move to next test in pipeline
+                  if (onComplete) {
+                    onComplete({
+                      testType: 'speech',
+                      score: sessionStats.averageScore,
+                      totalQuestions: totalQuestions,
+                      questionsAnswered: sessionStats.questionsAnswered
+                    });
+                  }
+                  
+                  // Move to next test
+                  if (onNext) {
+                    onNext();
+                  }
+                }}
                 disabled={loading || recording || !hasAnswered}
                 className="typing-button"
               >
-                ⌨️ Take Typing Test
+                🏁 Complete Speech Evaluation
               </button>
             )}
           </div>
@@ -528,57 +644,15 @@ const EvaluationPage = () => {
             </div>
             {currentQuestionIndex + 1 >= totalQuestions && (
               <div className="typing-notice">
-                <p>🎉 All speech questions completed! Click "Take Typing Test" to continue.</p>
+                <p>🎉 All speech questions completed! Click "Complete Speech Evaluation" to continue to the next test.</p>
               </div>
             )}
           </div>
         )}
 
-        {typingTestCompleted && (
-          <div className="typing-complete-section">
-            <h3>✅ Typing Test Completed!</h3>
-            <div className="completion-notice">
-              <p>Great job! You've completed both the speech evaluation and typing test.</p>
-              <p>Click "Finish Evaluation" to complete your assessment.</p>
-            </div>
-            <button
-              onClick={handleFinishEvaluation}
-              className="finish-button"
-            >
-              🏁 Finish Evaluation
-            </button>
-          </div>
-        )}
       </div>
 
-      {/* Sidebar */}
-      <div className="sidebar">
-        {renderApplicantInfo()}
-        
-        <div className="stats-card">
-          <h3>📊 Session Progress</h3>
-          <div className="stat-item">
-            <span className="stat-label">Questions</span>
-            <span className="stat-value">{currentQuestionIndex + 1} / {totalQuestions}</span>
-          </div>
-          <div className="stat-item">
-            <span className="stat-label">Answered</span>
-            <span className="stat-value">{sessionStats.questionsAnswered}</span>
-          </div>
-          <div className="stat-item">
-            <span className="stat-label">Total Time</span>
-            <span className="stat-value">{Math.round(sessionStats.totalRecordingTime)}s</span>
-          </div>
-          {sessionStats.averageScore > 0 && (
-            <div className="stat-item">
-              <span className="stat-label">Avg Score</span>
-              <span className="stat-value">{sessionStats.averageScore}</span>
-            </div>
-          )}
-        </div>
-
-        {renderTypingResults()}
-      </div>
+      
     </div>
   );
 };

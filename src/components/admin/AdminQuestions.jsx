@@ -2,7 +2,9 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import './AdminQuestions.css';
 
-const AdminQuestions = () => {
+const API_URL = import.meta.env.VITE_API_URL;
+
+const AdminQuestions = ({ getAuthHeaders }) => {
   const [questions, setQuestions] = useState([]);
   const [editingQuestion, setEditingQuestion] = useState(null);
   const [newQuestion, setNewQuestion] = useState({
@@ -17,7 +19,9 @@ const AdminQuestions = () => {
 
   const fetchQuestions = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/admin/questions');
+      const response = await axios.get(`${API_URL}/admin/questions`, {
+        headers: getAuthHeaders()
+      });
       setQuestions(response.data.questions || []);
     } catch (err) {
       console.error('Error fetching questions:', err);
@@ -29,10 +33,12 @@ const AdminQuestions = () => {
     try {
       const keywordsArray = newQuestion.keywords.split(',').map(k => k.trim()).filter(k => k);
       
-      const response = await axios.post('http://localhost:5000/admin/questions', {
+      const response = await axios.post(`${API_URL}/admin/questions`, {
         text: newQuestion.text,
         keywords: keywordsArray,
         active: newQuestion.active
+      }, {
+        headers: getAuthHeaders()
       });
       
       if (response.data.success) {
@@ -46,7 +52,9 @@ const AdminQuestions = () => {
 
   const handleUpdateQuestion = async (questionId, updatedData) => {
     try {
-      const response = await axios.put(`http://localhost:5000/admin/questions/${questionId}`, updatedData);
+      const response = await axios.put(`${API_URL}/admin/questions/${questionId}`, updatedData, {
+        headers: getAuthHeaders()
+      });
       if (response.data.success) {
         setEditingQuestion(null);
         fetchQuestions();
@@ -58,7 +66,9 @@ const AdminQuestions = () => {
 
   const handleDeleteQuestion = async (questionId) => {
     try {
-      await axios.delete(`http://localhost:5000/admin/questions/${questionId}`);
+      await axios.delete(`${API_URL}/admin/questions/${questionId}`, {
+        headers: getAuthHeaders()
+      });
       setQuestions(questions.filter(q => q.id !== questionId));
       alert('Question deleted successfully!');
     } catch (err) {
@@ -68,7 +78,9 @@ const AdminQuestions = () => {
 
   const handleReloadQuestions = async () => {
     try {
-      const response = await axios.post('http://localhost:5000/admin/questions/reload');
+      const response = await axios.post(`${API_URL}/admin/questions/reload`, {}, {
+        headers: getAuthHeaders()
+      });
       if (response.data.success) {
         fetchQuestions();
       }

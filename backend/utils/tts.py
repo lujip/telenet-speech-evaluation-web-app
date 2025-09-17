@@ -1,8 +1,10 @@
 import pyttsx3
 import threading
+import pythoncom
 
 def speak(text):
     """Convert text to speech using pyttsx3"""
+    pythoncom.CoInitialize()
     engine = pyttsx3.init()  # Initialize text-to-speech engine
     voices = engine.getProperty('voices')  # Get available voices
     for voice in voices:
@@ -11,6 +13,7 @@ def speak(text):
             break
     engine.say(text)  # Queue text for speech
     engine.runAndWait()  # Wait for speech to complete
+    pythoncom.CoUninitialize()
 
 def speak_async(text):
     """Convert text to speech asynchronously"""
