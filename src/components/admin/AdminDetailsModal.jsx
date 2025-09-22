@@ -163,6 +163,11 @@ const AdminDetailsModal = ({ applicant, onClose, getAuthHeaders, currentUser }) 
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
           <h2>{applicant.applicant_info?.lastName}, {applicant.applicant_info?.firstName} - Detailed Evaluation</h2>
+          <div className="modal-header-badges">
+            <span className="storage-type-badge">
+              {applicant.status === 'temporary' ? '🟡 Temporary' : '🟢 Permanent'}
+            </span>
+          </div>
           <button 
             onClick={onClose}
             className="close-button"

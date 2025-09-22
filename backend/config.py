@@ -79,5 +79,3 @@ MAX_QUESTIONS_PER_SESSION = 5
 # JWT Configuration
 JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY", "your-secret-key-change-this-in-production")
 JWT_EXPIRATION_HOURS = int(os.getenv("JWT_EXPIRATION_HOURS", "24")) 
-
-VITE_API_URL = os.getenv("VITE_API_URL", "http://192.168.77.123:5000")

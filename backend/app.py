@@ -15,10 +15,13 @@ from routes.users import users_bp
 def create_app():
     """Create and configure the Flask application"""
     app = Flask(__name__)
-    
     # Simple CORS configuration
-    CORS(app, origins=["http://localhost:5173",
-    "http://192.168.77.123:5173"], supports_credentials=True)
+    CORS(app, origins=["https://localhost:5173",
+    "https://192.168.77.123:5173",
+    "https://localhost:3000",
+    "https://192.168.77.123:3000",
+    "http://localhost:3000",           # ← Add this
+    "http://192.168.77.123:3000"], supports_credentials=True)
     
     # Enable Flask's built-in reloader
     app.config['TEMPLATES_AUTO_RELOAD'] = True
@@ -67,7 +70,8 @@ if __name__ == "__main__":
     app.run(
         host='0.0.0.0', 
         port=FLASK_PORT, 
-        debug=FLASK_DEBUG,
-        threaded=True,
-        use_reloader=FLASK_DEBUG  # Only use reloader in debug mode
+       # debug=FLASK_DEBUG,
+       # threaded=True,
+       # use_reloader=FLASK_DEBUG,  # Only use reloader in debug mode
+        ssl_context=("cert.pem", "key.pem")
     )

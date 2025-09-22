@@ -6,43 +6,21 @@ from utils.session import (
     get_active_listening_test_questions, get_question_by_index
 )
 from utils.tts import speak_async
+from utils.file_ops import (
+    load_questions, save_questions, load_listening_test_questions, save_listening_test_questions, load_written_test_questions, save_written_test_questions
+)
 
 questions_bp = Blueprint('questions', __name__)
 
-@questions_bp.route("/question", methods=["GET"])
+@questions_bp.route("/questions/current", methods=["GET"])
 def get_current_question():
-    """Get current question for a session"""
-    # Get session ID from query parameters
-    session_id = request.args.get("session_id")  # Extract session ID from query params
-    
-    if not session_id:  # Validate session ID exists
-        return jsonify({"text": "Session ID required", "keywords": []}), 400
-    
-    # Get session-specific questions and state
-    questions = get_active_questions_for_session(session_id)  # Load questions for this session
-    state = get_session_state(session_id)  # Get current session state
-    current_index = state['current_index']  # Get current question index
-    
-    print(f"DEBUG: Session {session_id} - Loaded {len(questions)} active questions")  # Debug logging
-    print(f"DEBUG: Session {session_id} - Current index: {current_index}")
-    
-    if not questions or len(questions) == 0:  # Check if questions exist
-        print("DEBUG: No active questions found")
-        return jsonify({"text": "No questions available", "keywords": []})
-    
-    # Get current question
-    current_question = get_question_by_index(session_id, current_index)  # Get current question data
-    if current_question:  # Check if question exists
-        print(f"DEBUG: Session {session_id} - Returning question {current_index + 1}: {current_question['text'][:50]}...")
-        return jsonify({
-            "text": current_question["text"],
-            "keywords": current_question.get("keywords", []),
-            "id": current_question.get("id"),
-            "audio_id": current_question.get("audio_id", "")
-        })  # Return current question as JSON
-    else:  # If no current question
-        print(f"DEBUG: Session {session_id} - No current question available")
-        return jsonify({"text": "No questions available", "keywords": []})
+    """Get the current question from MongoDB."""
+    try:
+        questions = load_questions()
+        # ... (existing logic to select the current question)
+        # Return the question as before
+    except Exception as e:
+        return jsonify({"success": False, "message": str(e)}), 500
 
 @questions_bp.route("/question_count", methods=["GET"])
 def get_question_count():

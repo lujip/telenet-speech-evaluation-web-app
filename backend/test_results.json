@@ -1,0 +1,32 @@
+{
+  "timestamp": "2025-09-19T10:24:23.434633",
+  "command_args": {
+    "quick": true,
+    "backend_only": false,
+    "frontend_only": false,
+    "integration_only": false,
+    "verbose": false,
+    "headless": false,
+    "slow": false,
+    "skip_checks": false,
+    "skip_servers": false,
+    "ignore_deps": false,
+    "ignore_servers": false
+  },
+  "summary": {
+    "total_suites": 2,
+    "passed_suites": 0,
+    "failed_suites": 2,
+    "skipped_suites": 0
+  },
+  "test_suites": {
+    "Backend API (Essential)": {
+      "status": "failed",
+      "duration": 0.8892335891723633
+    },
+    "Frontend (Basic)": {
+      "status": "failed",
+      "duration": 0.1654651165008545
+    }
+  }
+}

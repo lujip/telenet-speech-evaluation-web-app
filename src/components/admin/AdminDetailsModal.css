@@ -1159,3 +1159,20 @@
   font-style: italic;
 }
 
+/* Modal header badges */
+.modal-header-badges {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.modal-header .storage-type-badge {
+  font-size: 12px;
+  padding: 4px 8px;
+  border-radius: 12px;
+  background-color: #f3f4f6;
+  color: #374151;
+  border: 1px solid #d1d5db;
+  white-space: nowrap;
+}
+

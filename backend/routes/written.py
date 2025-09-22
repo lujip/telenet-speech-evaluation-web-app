@@ -3,58 +3,43 @@ import json
 import random
 from datetime import datetime
 from config import WRITTEN_TEST_QUESTIONS_FILE
-from utils.file_ops import save_temp_evaluation, load_temp_evaluation
+from utils.file_ops import (
+    save_temp_evaluation, load_temp_evaluation, load_written_test_questions, save_written_test_questions
+)
 
 written_bp = Blueprint('written', __name__)
 
 @written_bp.route("/written/questions", methods=["GET"])
 def get_written_test_questions():
-    """Get a random set of written test questions"""
+    """Get a random set of written test questions from MongoDB"""
     try:
-        # Load all questions from file
-        with open(WRITTEN_TEST_QUESTIONS_FILE, 'r') as f:
-            all_questions = json.load(f)
-        
-        # Select 5 random questions for the test
-        # = random.sample(all_questions, min(5, len(all_questions)))
-        
+        # Load all questions from MongoDB
+        all_questions = load_written_test_questions()
+        # Select 5 random questions for the test (if you want random selection)
+        # import random
+        # selected_questions = random.sample(all_questions, min(5, len(all_questions)))
         # Remove correct answers from response (only send to frontend for display)
         questions_for_frontend = []
-       # for question in selected_questions:
         for question in all_questions:
             question_copy = {
                 "id": question["id"],
-                "type": question.get("type", "multiple_choice"),  # Default to multiple_choice for backward compatibility
+                "type": question.get("type", "multiple_choice"),
                 "question": question["question"],
                 "category": question["category"],
                 "difficulty": question["difficulty"]
             }
-            
-            # Include additional fields based on question type
             if question.get("type") == "input":
                 question_copy["input_type"] = question.get("input_type", "text")
                 question_copy["placeholder"] = question.get("placeholder", "Enter your answer")
             else:
-                # Multiple choice question
                 question_copy["options"] = question["options"]
-            
             questions_for_frontend.append(question_copy)
-        
         return jsonify({
             "success": True,
             "questions": questions_for_frontend
         }), 200
-        
-    except FileNotFoundError:
-        return jsonify({
-            "success": False,
-            "message": "Written test questions file not found"
-        }), 404
     except Exception as e:
-        return jsonify({
-            "success": False,
-            "message": f"Error retrieving written test questions: {str(e)}"
-        }), 500
+        return jsonify({"success": False, "message": str(e)}), 500
 
 @written_bp.route("/written/submit", methods=["POST"])
 def submit_written_test():
@@ -77,8 +62,7 @@ def submit_written_test():
             }), 400
         
         # Load all questions to check correct answers
-        with open(WRITTEN_TEST_QUESTIONS_FILE, 'r') as f:
-            all_questions = json.load(f)
+        all_questions = load_written_test_questions()
         
         # Create a lookup for questions by ID
         questions_lookup = {q["id"]: q for q in all_questions}
@@ -174,7 +158,11 @@ def submit_written_test():
         temp_evaluations["written_test"].append(written_result)
         
         # Save back to temporary file
-        save_temp_evaluation(temp_evaluations, session_id)
+        if not save_temp_evaluation(temp_evaluations, session_id):
+            return jsonify({
+                "success": False,
+                "message": "Failed to save evaluation results"
+            }), 500
         
         return jsonify({
             "success": True,

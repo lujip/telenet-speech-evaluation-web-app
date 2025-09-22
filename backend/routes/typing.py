@@ -3,25 +3,21 @@ import json
 import os
 from datetime import datetime
 from config import TYPING_TESTS_FILE
-from utils.file_ops import save_temp_evaluation, load_temp_evaluation
+from utils.file_ops import (
+    load_typing_tests, save_typing_tests, save_temp_evaluation, load_temp_evaluation
+)
 
 typing_bp = Blueprint('typing', __name__)
 
 @typing_bp.route("/typing/test", methods=["GET"])
 def get_typing_test():
-    """Get a random typing test for the applicant"""
+    """Get a random typing test for the applicant from MongoDB"""
     try:
-        # Load typing tests from JSON file
-        if not os.path.exists(TYPING_TESTS_FILE):
+        typing_tests = load_typing_tests()
+        if not typing_tests:
             return jsonify({"success": False, "message": "Typing tests not available"}), 404
-        
-        with open(TYPING_TESTS_FILE, 'r') as f:
-            typing_data = json.load(f)
-        
-        # Select a random test (you could also implement difficulty-based selection)
         import random
-        selected_test = random.choice(typing_data["typing_tests"])
-        
+        selected_test = random.choice(typing_tests)
         return jsonify({
             "success": True,
             "test": {
@@ -33,7 +29,6 @@ def get_typing_test():
                 "category": selected_test["category"]
             }
         })
-        
     except Exception as e:
         return jsonify({"success": False, "message": f"Error retrieving typing test: {str(e)}"}), 500
 
@@ -89,7 +84,11 @@ def submit_typing_test():
         temp_evaluations["typing_test"].append(typing_result)
         
         # Save back to temporary file
-        save_temp_evaluation(temp_evaluations, session_id)
+        if not save_temp_evaluation(temp_evaluations, session_id):
+            return jsonify({
+                "success": False,
+                "message": "Failed to save evaluation results"
+            }), 500
         
         return jsonify({
             "success": True,

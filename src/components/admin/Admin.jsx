@@ -344,6 +344,19 @@ const Admin = () => {
     return 'In Progress';
   };
 
+  const getStorageTypeLabel = (applicant) => {
+    return applicant.status === 'temporary' ? '🟡 Temporary' : '🟢 Permanent';
+  };
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'Completed': return '#10b981';
+      case 'In Progress': return '#f59e0b';
+      case 'Not Started': return '#6b7280';
+      default: return '#6b7280';
+    }
+  };
+
   {/*
   const getTotalQuestions = (applicant) => {
     // New segmented format only
@@ -385,15 +398,6 @@ const Admin = () => {
   const formatDate = (dateString) => {
     if (!dateString) return 'N/A';
     return new Date(dateString).toLocaleString();
-  };
-
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'Completed': return '#10b981';
-      case 'In Progress': return '#f59e0b';
-      case 'Not Started': return '#6b7280';
-      default: return '#6b7280';
-    }
   };
 
   // Login Form
@@ -566,12 +570,17 @@ const Admin = () => {
                   <div key={`${applicant.id}_${index}`} className="applicant-card">
                     <div className="applicant-header">
                       <h3>{fullName}</h3>
-                      <span 
-                        className="status-badge"
-                        style={{ backgroundColor: getStatusColor(getCompletionStatus(applicant)) }}
-                      >
-                        {getCompletionStatus(applicant)}
-                      </span>
+                      <div className="status-badges">
+                        <span 
+                          className="status-badge"
+                          style={{ backgroundColor: getStatusColor(getCompletionStatus(applicant)) }}
+                        >
+                          {getCompletionStatus(applicant)}
+                        </span>
+                        <span className="storage-type-badge">
+                          {getStorageTypeLabel(applicant)}
+                        </span>
+                      </div>
                     </div>
                     
                     <div className="applicant-info">
@@ -663,6 +672,9 @@ const Admin = () => {
                           style={{ backgroundColor: getStatusColor(getCompletionStatus(applicant)) }}
                         >
                           {getCompletionStatus(applicant)}
+                        </span>
+                        <span className="storage-type-badge list-storage">
+                          {getStorageTypeLabel(applicant)}
                         </span>
                       </div>
                       

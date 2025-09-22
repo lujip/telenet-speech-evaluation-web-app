@@ -42,7 +42,9 @@ def store_applicant():
         if not re.match(email_pattern, applicant_info.get('email', '')):
             return jsonify({"success": False, "message": "Invalid email format"}), 400
 
-        save_temp_applicant(applicant_data, session_id)  # Save to temporary file
+        # Save to temporary storage
+        if not save_temp_applicant(applicant_data, session_id):
+            return jsonify({"success": False, "message": "Failed to save applicant data"}), 500
 
         print(f"Stored comprehensive applicant data for session {session_id}")
         print(f"  - Position: {applicant_info.get('positionApplied', 'N/A')}")
@@ -115,7 +117,11 @@ def finish_evaluation():
                     applicants_data["applicants"].append(combined_record)  # Add to applicants list
 
                 # Save to applicants.json
-                save_applicants(applicants_data)  # Persist updated data to file
+                if not save_applicants(applicants_data):
+                    return jsonify({
+                        "success": False, 
+                        "message": "Failed to save applicant data to database"
+                    }), 500
 
                 # Clean up temporary files
                 cleanup_temp_files(session_id)  # Remove temporary files
@@ -153,10 +159,89 @@ def finish_evaluation():
 
 @applicant_bp.route("/get_applicants", methods=["GET"])
 def get_applicants():
-    """Retrieve all stored applicants data"""
+    """Retrieve all stored applicants data including temporary applicants"""
     try:
-        applicants_data = load_applicants()  # Load applicants from file
-        return jsonify(applicants_data)  # Return applicants data as JSON
+        # Load permanent applicants from MongoDB
+        applicants_data = load_applicants()  # Load applicants from database
+        
+        # Load temporary applicants and convert them to the same format
+        from utils.file_ops import load_all_temp_applicants, load_temp_evaluation, load_temp_comments
+        temp_applicants_raw = load_all_temp_applicants()
+        temp_applicants_formatted = []
+        
+        for temp_applicant in temp_applicants_raw:
+            session_id = temp_applicant.get("sessionId")
+            
+            # Convert temp applicant to permanent applicant format
+            formatted_applicant = {
+                "id": session_id,
+                "applicant_info": temp_applicant.get("applicant", {}),
+                "application_timestamp": temp_applicant.get("timestamp"),
+                "completion_timestamp": None,  # Not completed yet
+                "last_updated": temp_applicant.get("timestamp"),
+                "total_questions": 0,  # Will calculate from evaluations
+                "comments": load_temp_comments(session_id),
+                "status": "temporary"  # Mark as temporary for frontend
+            }
+            
+            # Try to load corresponding evaluation data
+            eval_data = load_temp_evaluation(session_id)
+            if eval_data:
+                # Handle segmented evaluation structure
+                formatted_applicant.update(eval_data)
+                # Calculate total questions from all test segments
+                total_questions = 0
+                total_questions += len(eval_data.get("speech_eval", []))
+                total_questions += len(eval_data.get("listening_test", []))
+                total_questions += len(eval_data.get("written_test", []))
+                total_questions += len(eval_data.get("typing_test", []))
+                formatted_applicant["total_questions"] = total_questions
+                
+                # Ensure all test segments are present
+                for segment in ["speech_eval", "listening_test", "written_test", "typing_test"]:
+                    if segment not in formatted_applicant:
+                        formatted_applicant[segment] = []
+            else:
+                # Initialize empty evaluation segments if no evaluations exist
+                formatted_applicant.update({
+                    "speech_eval": [],
+                    "listening_test": [],
+                    "written_test": [],
+                    "typing_test": []
+                })
+            
+            temp_applicants_formatted.append(formatted_applicant)
+        
+        # Mark permanent applicants with status
+        for applicant in applicants_data.get("applicants", []):
+            if "status" not in applicant:
+                applicant["status"] = "permanent"
+        
+        # Combine permanent and temporary applicants
+        all_applicants = {
+            "applicants": applicants_data.get("applicants", []) + temp_applicants_formatted
+        }
+        
+        # Sort applicants by timestamp (newest first)
+        # Handle both 'application_timestamp' and 'last_updated' fields
+        def get_sort_timestamp(applicant):
+            # Get the most recent timestamp available
+            timestamps = []
+            if applicant.get("application_timestamp"):
+                timestamps.append(applicant["application_timestamp"])
+            if applicant.get("last_updated"):
+                timestamps.append(applicant["last_updated"])
+            if applicant.get("completion_timestamp"):
+                timestamps.append(applicant["completion_timestamp"])
+            
+            # Return the most recent timestamp, or a default old date if none found
+            if timestamps:
+                return max(timestamps)
+            return "1970-01-01T00:00:00.000Z"  # Very old date for items without timestamps
+        
+        all_applicants["applicants"].sort(key=get_sort_timestamp, reverse=True)
+        
+        return jsonify(all_applicants)  # Return combined applicants data as JSON
     except Exception as e:  # Handle any errors during retrieval
         return jsonify({"success": False, "message": f"Error retrieving applicants: {str(e)}"}), 500
 
@@ -169,21 +254,17 @@ def get_applicant_details():
         if not applicant_id:  # Validate applicant ID exists
             return jsonify({"success": False, "message": "Applicant ID required"}), 400
         
-        applicants_data = load_applicants()  # Load applicants from file
-        
-        # Find the specific applicant
-        applicant = None
-        for app in applicants_data.get("applicants", []):
-            if app.get("id") == applicant_id:
-                applicant = app
-                break
+        # Use the admin function to find applicant in both permanent and temporary storage
+        from routes.admin import find_applicant_data
+        applicant, storage_type, _ = find_applicant_data(applicant_id)
         
         if not applicant:
             return jsonify({"success": False, "message": "Applicant not found"}), 404
         
         return jsonify({
             "success": True,
-            "applicant": applicant
+            "applicant": applicant,
+            "storage_type": storage_type  # Let frontend know if this is temporary
         })
         
     except Exception as e:  # Handle any errors during retrieval

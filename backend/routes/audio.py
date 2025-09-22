@@ -3,7 +3,7 @@ import os
 import subprocess
 import uuid
 from datetime import datetime
-from utils.file_ops import save_audio_file, save_temp_evaluation
+from utils.file_ops import save_audio_file, save_temp_evaluation, load_temp_evaluation
 from utils.evaluation import run_evaluation
 from utils.session import mark_question_answered
 from utils.tts import speak_async
@@ -74,7 +74,22 @@ def evaluate():
     
     # Save evaluation result
     if session_id:  # Check if session ID exists
-        save_temp_evaluation(result, session_id, question_index, test_type="speech_eval")  # Save evaluation data
+        # Load existing temp evaluations for this session
+        temp_evaluations = load_temp_evaluation(session_id)
+        if not temp_evaluations:
+            temp_evaluations = {
+                "speech_eval": [],
+                "listening_test": [],
+                "written_test": [],
+                "typing_test": []
+            }
+        
+        # Add speech evaluation result to speech_eval section
+        temp_evaluations["speech_eval"].append(result)
+        
+        # Save back to temporary evaluations
+        if not save_temp_evaluation(temp_evaluations, session_id):
+            print(f"Warning: Failed to save speech evaluation for session {session_id}")  # Log warning but don't fail request
     
     return jsonify(result)  # Return evaluation results
 
@@ -198,7 +213,22 @@ def evaluate_listening_test():
     
     # Save evaluation result to listening test section
     if session_id:  # Check if session ID exists
-        save_temp_evaluation(result, session_id, question_index, test_type="listening_test")  # Save evaluation data
+        # Load existing temp evaluations for this session
+        temp_evaluations = load_temp_evaluation(session_id)
+        if not temp_evaluations:
+            temp_evaluations = {
+                "speech_eval": [],
+                "listening_test": [],
+                "written_test": [],
+                "typing_test": []
+            }
+        
+        # Add listening test result to listening_test section
+        temp_evaluations["listening_test"].append(result)
+        
+        # Save back to temporary evaluations
+        if not save_temp_evaluation(temp_evaluations, session_id):
+            print(f"Warning: Failed to save listening test evaluation for session {session_id}")  # Log warning but don't fail request
     
     return jsonify(result)  # Return evaluation results
 

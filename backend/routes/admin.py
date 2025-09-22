@@ -5,7 +5,7 @@ from utils.file_ops import (
     load_applicants, save_applicants, load_questions, save_questions, 
     load_listening_test_questions, save_listening_test_questions,
     cleanup_temp_files, cleanup_recordings, load_temp_applicant, load_temp_evaluation,
-    save_temp_comments, load_temp_comments
+    save_temp_comments, load_temp_comments, load_all_temp_applicants
 )
 from utils.session import clear_session
 from utils.auth import require_permission, require_auth
@@ -18,6 +18,9 @@ def find_applicant_data(applicant_id):
     applicants_data = load_applicants()
     for app in applicants_data.get("applicants", []):
         if app.get("id") == applicant_id:
+            # Add status field if not present
+            if "status" not in app:
+                app["status"] = "permanent"
             return app, "permanent", applicants_data
     
     # If not found, try to load as temporary applicant
@@ -29,13 +32,14 @@ def find_applicant_data(applicant_id):
             "applicant_info": temp_applicant.get("applicant", {}),
             "application_timestamp": temp_applicant.get("timestamp"),
             "evaluations": [],
-            "total_questions": 5,
+            "total_questions": 0,  # Will calculate from evaluations
             "completion_timestamp": None,
             "last_updated": temp_applicant.get("timestamp"),
-            "comments": load_temp_comments(applicant_id)  # Load temp comments
+            "comments": load_temp_comments(applicant_id),  # Load temp comments
+            "status": "temporary"  # Mark as temporary
         }
         
-        # Try to load corresponding evaluation file
+        # Try to load corresponding evaluation data
         eval_data = load_temp_evaluation(applicant_id)
         if eval_data:
             # Handle both old and new segmented structure
@@ -50,6 +54,7 @@ def find_applicant_data(applicant_id):
                 total_questions = 0
                 total_questions += len(eval_data.get("speech_eval", []))
                 total_questions += len(eval_data.get("listening_test", []))
+                total_questions += len(eval_data.get("written_test", []))  # Fixed: was missing
                 total_questions += len(eval_data.get("typing_test", []))
                 applicant_entry["total_questions"] = total_questions
                 
@@ -57,114 +62,104 @@ def find_applicant_data(applicant_id):
                 for segment in ["speech_eval", "listening_test", "written_test", "typing_test"]:
                     if segment not in applicant_entry:
                         applicant_entry[segment] = []
+        else:
+            # Initialize empty evaluation segments if no evaluations exist
+            applicant_entry.update({
+                "speech_eval": [],
+                "listening_test": [],
+                "written_test": [],
+                "typing_test": []
+            })
         
         return applicant_entry, "temporary", None
     
     return None, None, None
 
 @admin_bp.route("/admin/applicants", methods=["GET"])
-@require_permission("view_applicants")
+@require_permission("view_applicants")  # Re-enabled authentication
 def admin_get_applicants():
-    """Admin endpoint to retrieve all applicants data including temporary files"""
+    """Admin endpoint to retrieve all applicants data including temporary applicants"""
     try:
-        # Load main applicants data
-        main_applicants = load_applicants()  # Load existing applicants from main data file
-        print(f"📋 Loaded {len(main_applicants.get('applicants', []))} main applicants")
+        # Load permanent applicants from MongoDB
+        main_applicants = load_applicants()  # Now loads from MongoDB
         
-        # Find and load temporary applicant files
-        temp_applicants = []  # Initialize list for temporary applicants
-        temp_dir = "data/temp_applicants"  # Set temp_applicants directory path
-        print(f"🔍 Scanning {temp_dir} directory for temporary applicant files...")
-        if os.path.exists(temp_dir):  # Check if temp_applicants directory exists
-            for filename in os.listdir(temp_dir):  # Iterate through all files in temp_applicants directory
-                if filename.startswith("temp_applicant_") and filename.endswith(".json"):  # Find temporary applicant files
-                    try:
-                        with open(os.path.join(temp_dir, filename), 'r') as f:  # Open temporary applicant file
-                            import json
-                            temp_data = json.load(f)  # Load JSON data from temporary file
-                            # Convert temp format to main format
-                            applicant_entry = {  # Create standardized applicant entry format
-                                "id": temp_data.get("sessionId"),  # Use session ID as applicant ID
-                                "applicant_info": temp_data.get("applicant", {}),  # Extract applicant information
-                                "application_timestamp": temp_data.get("timestamp"),  # Get application timestamp
-                                "evaluations": [],  # Initialize empty evaluations list
-                                "total_questions": 5,  # Default to 5 questions
-                                "completion_timestamp": None,  # Set completion timestamp to None
-                                "last_updated": temp_data.get("timestamp"),  # Set last updated timestamp
-                                "comments": []  # Initialize empty comments array
-                            }
-                            
-                            # Try to load corresponding evaluation file
-                            eval_filename = f"temp_evaluation_{temp_data.get('sessionId')}.json"  # Generate evaluation filename
-                            eval_filepath = os.path.join(temp_dir, eval_filename)
-                            if os.path.exists(eval_filepath):  # Check if evaluation file exists
-                                try:
-                                    with open(eval_filepath, 'r') as eval_f:  # Open evaluation file
-                                        eval_data = json.load(eval_f)  # Load evaluation JSON data
-                                        # Handle both old and new segmented structure
-                                        if "evaluations" in eval_data:
-                                            # Old format - migrate to new structure
-                                            applicant_entry["evaluations"] = eval_data.get("evaluations", [])
-                                            # Calculate total questions from old evaluations
-                                            applicant_entry["total_questions"] = len(eval_data.get("evaluations", []))
-                                            print(f"📋 Loaded old format evaluations for {temp_data.get('sessionId')}: {len(eval_data.get('evaluations', []))} questions")
-                                        else:
-                                            # New segmented format - preserve the structure
-                                            applicant_entry.update(eval_data)  # Keep the segmented structure
-                                            
-                                            # Calculate total questions from all test segments
-                                            total_questions = 0
-                                            speech_count = len(eval_data.get("speech_eval", []))
-                                            listening_count = len(eval_data.get("listening_test", []))
-                                            typing_count = len(eval_data.get("typing_test", []))
-                                            
-                                            total_questions += speech_count
-                                            total_questions += listening_count
-                                            total_questions += typing_count
-                                            
-                                            # Set the total questions count
-                                            applicant_entry["total_questions"] = total_questions
-                                            
-                                            # Ensure all test segments are present (initialize as empty arrays if missing)
-                                            if "speech_eval" not in applicant_entry:
-                                                applicant_entry["speech_eval"] = []
-                                            if "listening_test" not in applicant_entry:
-                                                applicant_entry["listening_test"] = []
-                                            if "typing_test" not in applicant_entry:
-                                                applicant_entry["typing_test"] = []
-                                            if "written_test" not in applicant_entry:
-                                                applicant_entry["written_test"] = []
-                                            
-                                            print(f"📊 Loaded new segmented structure for {temp_data.get('sessionId')}: {speech_count} speech, {listening_count} listening, {typing_count} typing = {total_questions} total")
-                                except Exception as eval_err:  # Handle evaluation file loading errors
-                                    print(f"Error loading evaluation file {eval_filename}: {eval_err}")
-                            
-                            temp_applicants.append(applicant_entry)  # Add temporary applicant to list
-                            print(f"✅ Successfully loaded temp applicant: {temp_data.get('sessionId')}")
-                    except Exception as temp_err:  # Handle temporary file loading errors
-                        print(f"❌ Error loading temp file {filename}: {temp_err}")
+        # Load temporary applicants and convert them to the same format
+        temp_applicants_raw = load_all_temp_applicants()
+        temp_applicants_formatted = []
         
-        # Summary of temp files loaded
-        if temp_applicants:
-            print(f"\n📊 Temporary applicants summary:")
-            for temp_app in temp_applicants:
-                session_id = temp_app.get("id", "unknown")
-                speech_count = len(temp_app.get("speech_eval", []))
-                listening_count = len(temp_app.get("listening_test", []))
-                typing_count = len(temp_app.get("typing_test", []))
-                total = temp_app.get("total_questions", 0)
-                print(f"   - {session_id}: {speech_count} speech, {listening_count} listening, {typing_count} typing = {total} total")
+        for temp_applicant in temp_applicants_raw:
+            session_id = temp_applicant.get("sessionId")
+            
+            # Convert temp applicant to permanent applicant format
+            formatted_applicant = {
+                "id": session_id,
+                "applicant_info": temp_applicant.get("applicant", {}),
+                "application_timestamp": temp_applicant.get("timestamp"),
+                "completion_timestamp": None,  # Not completed yet
+                "last_updated": temp_applicant.get("timestamp"),
+                "total_questions": 0,  # Will calculate from evaluations
+                "comments": load_temp_comments(session_id),
+                "status": "temporary"  # Mark as temporary for frontend
+            }
+            
+            # Try to load corresponding evaluation data
+            eval_data = load_temp_evaluation(session_id)
+            if eval_data:
+                # Handle segmented evaluation structure
+                formatted_applicant.update(eval_data)
+                # Calculate total questions from all test segments
+                total_questions = 0
+                total_questions += len(eval_data.get("speech_eval", []))
+                total_questions += len(eval_data.get("listening_test", []))
+                total_questions += len(eval_data.get("written_test", []))
+                total_questions += len(eval_data.get("typing_test", []))
+                formatted_applicant["total_questions"] = total_questions
+                
+                # Ensure all test segments are present
+                for segment in ["speech_eval", "listening_test", "written_test", "typing_test"]:
+                    if segment not in formatted_applicant:
+                        formatted_applicant[segment] = []
+            else:
+                # Initialize empty evaluation segments if no evaluations exist
+                formatted_applicant.update({
+                    "speech_eval": [],
+                    "listening_test": [],
+                    "written_test": [],
+                    "typing_test": []
+                })
+            
+            temp_applicants_formatted.append(formatted_applicant)
         
-        # Combine main and temporary applicants
-        all_applicants = main_applicants.get("applicants", []) + temp_applicants  # Merge both applicant lists
+        # Mark permanent applicants with status
+        for applicant in main_applicants.get("applicants", []):
+            applicant["status"] = "permanent"
         
-        # Sort by application timestamp (newest first)
-        all_applicants.sort(key=lambda x: x.get("application_timestamp", ""), reverse=True)  # Sort applicants by timestamp
+        # Combine permanent and temporary applicants
+        all_applicants = {
+            "applicants": main_applicants.get("applicants", []) + temp_applicants_formatted
+        }
         
-        print(f"✅ Total applicants loaded: {len(all_applicants)} (main: {len(main_applicants.get('applicants', []))}, temp: {len(temp_applicants)})")
-       # print(f"Temp applicants: {temp_applicants}")
-        return jsonify({"applicants": all_applicants})  # Return all applicants as JSON response
-    except Exception as e:  # Handle any unexpected errors
+        # Sort applicants by timestamp (newest first)
+        # Handle both 'application_timestamp' and 'last_updated' fields
+        def get_sort_timestamp(applicant):
+            # Get the most recent timestamp available
+            timestamps = []
+            if applicant.get("application_timestamp"):
+                timestamps.append(applicant["application_timestamp"])
+            if applicant.get("last_updated"):
+                timestamps.append(applicant["last_updated"])
+            if applicant.get("completion_timestamp"):
+                timestamps.append(applicant["completion_timestamp"])
+            
+            # Return the most recent timestamp, or a default old date if none found
+            if timestamps:
+                return max(timestamps)
+            return "1970-01-01T00:00:00.000Z"  # Very old date for items without timestamps
+        
+        all_applicants["applicants"].sort(key=get_sort_timestamp, reverse=True)
+        
+        return jsonify(all_applicants)
+    except Exception as e:
         return jsonify({"success": False, "message": f"Error retrieving applicants: {str(e)}"}), 500
 
 @admin_bp.route("/admin/questions", methods=["GET"])
@@ -199,7 +194,8 @@ def admin_add_question():
         }
         
         all_questions.append(new_question)  # Add new question to questions list
-        save_questions(all_questions)  # Save updated questions to file
+        if not save_questions(all_questions):  # Save updated questions to database
+            return jsonify({"success": False, "message": "Failed to save question to database"}), 500
         
         return jsonify({"success": True, "message": "Question added successfully", "question": new_question})  # Return success response
     except Exception as e:  # Handle any errors during question addition
@@ -234,7 +230,8 @@ def admin_update_question(question_id):
         if "active" in data:  # Check if active status should be updated
             all_questions[question_index]["active"] = data["active"]  # Update active status
         
-        save_questions(all_questions)  # Save updated questions to file
+        if not save_questions(all_questions):  # Save updated questions to database
+            return jsonify({"success": False, "message": "Failed to save question update to database"}), 500
         
         return jsonify({"success": True, "message": "Question updated successfully", "question": all_questions[question_index]})  # Return success response
     except Exception as e:  # Handle any errors during question update
@@ -312,30 +309,22 @@ def admin_delete_applicant(session_id):
         # Check if applicant was found and removed
         if len(applicants_data["applicants"]) == original_count:  # Check if no applicant was removed
             print(f"Applicant {session_id} not found in applicants.json")  # Log that applicant wasn't found
-            # Check if it exists in temporary files
-            temp_applicant_file = f"data/temp_applicants/temp_applicant_{session_id}.json"  # Generate temporary applicant file path
-            if os.path.exists(temp_applicant_file):  # Check if temporary file exists
-                print(f"Found temporary applicant file: {temp_applicant_file}")  # Log temporary file found
+            # Check if it exists in temporary MongoDB collections
+            from utils.file_ops import load_temp_applicant
+            temp_applicant_data = load_temp_applicant(session_id)
+            if temp_applicant_data:  # Check if temporary data exists in MongoDB
+                print(f"Found temporary applicant data in MongoDB for session: {session_id}")  # Log temporary data found
                 try:
-                    os.remove(temp_applicant_file)  # Delete temporary applicant file
-                    print(f"Deleted temporary applicant file: {temp_applicant_file}")  # Log file deletion
-                    
-                    # Also try to delete corresponding evaluation and comments files
-                    temp_eval_file = f"data/temp_applicants/temp_evaluation_{session_id}.json"  # Generate temporary evaluation file path
-                    if os.path.exists(temp_eval_file):  # Check if evaluation file exists
-                        os.remove(temp_eval_file)  # Delete temporary evaluation file
-                        print(f"Deleted temporary evaluation file: {temp_eval_file}")  # Log evaluation file deletion
-                    
-                    temp_comments_file = f"data/temp_applicants/temp_comments_{session_id}.json"  # Generate temporary comments file path
-                    if os.path.exists(temp_comments_file):  # Check if comments file exists
-                        os.remove(temp_comments_file)  # Delete temporary comments file
-                        print(f"Deleted temporary comments file: {temp_comments_file}")  # Log comments file deletion
+                    # Clean up temporary data from MongoDB collections
+                    cleanup_success = cleanup_temp_files(session_id)
+                    if cleanup_success:
+                        print(f"Deleted temporary applicant data for session: {session_id}")  # Log data deletion
                     
                     # Clean up recordings
                     cleanup_recordings(session_id)  # Remove applicant's audio recordings
                     
                     return jsonify({"success": True, "message": "Temporary applicant deleted successfully"})  # Return success response
-                except Exception as e:  # Handle temporary file deletion errors
+                except Exception as e:  # Handle temporary data deletion errors
                     print(f"Error deleting temporary files: {e}")  # Log deletion error
                     return jsonify({"success": False, "message": f"Error deleting temporary applicant: {str(e)}"}), 500
             else:

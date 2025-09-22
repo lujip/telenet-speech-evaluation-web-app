@@ -1,9 +1,9 @@
 import pyttsx3
 import sounddevice as sd
 import soundfile as sf
-import whisper
-import language_tool_python
-import parselmouth
+#import whisper
+#import language_tool_python
+#import parselmouth
 import numpy as np
 import os
 import openai
@@ -122,105 +122,20 @@ def record_audio(file_name, duration=10):
     print("✅ Recording saved.\n")
 
 # ------------------ 3.1. Transcribe Audio (OBSOLETE) ------------------ #
-model = whisper.load_model("medium")
+#model = whisper.load_model("medium")
 
-def transcribe_audio(file_path):
-    result = model.transcribe(file_path, word_timestamps=True, language="en")
-    return result["text"]
+#def transcribe_audio(file_path):
+#    result = model.transcribe(file_path, word_timestamps=True, language="en")
+#    return result["text"]
 
 # ------------------ 3.2. Transcribe Audio (DETECT FILLERS AND STOP WORDS) (OBSOLETE) ------------------ #
 #from faster_whisper import WhisperModel
 
 #fw_model = WhisperModel("medium", compute_type="int8")  # or "float32"
 
-# ------------------ Combined Transcriber with Filler Detection (OBSOLETE)------------------ #
-def transcribe_audio_deepgram_api(audio_path, min_pause_duration=0.3):
-    #from faster_whisper import WhisperModel
-
-    segments, info = fw_model.transcribe(audio_path, beam_size=5, word_timestamps=True, language="en")
-
-    words = []
-    full_text = ""
-    for segment in segments:
-        for word in segment.words:
-            words.append({
-                "word": word.word,
-                "start": word.start,
-                "end": word.end,
-                "probability": word.probability
-            })
-            full_text += word.word + " "
-
-    sound = parselmouth.Sound(audio_path)
-    intensity = sound.to_intensity()
-    total_duration = sound.duration
-
-    pauses = []
-    current_pause_start = None
-    for t in range(0, int(total_duration * 100)):
-        time = t / 100.0
-        db = intensity.get_value(time)
-
-        if db is None or db < 40:  # silence threshold
-            if current_pause_start is None:
-                current_pause_start = time
-        else:
-            if current_pause_start is not None:
-                pause_duration = time - current_pause_start
-                if pause_duration >= min_pause_duration:
-                    pauses.append((current_pause_start, time))
-                current_pause_start = None
-
-    # filler words (english + bisaya)
-    filler_words = {
-        "uh", "um", "umm", "uhh", "like", "well", "so", "you", "i", "just", "yeah", "hmm", "er", "ah", "okay",
-        "kanang", "ano", "eh", "uhm", "bali", "parang", "diba"
-    }
-
-    filler_flags = []
-
-    for word in words:
-        word_text = word["word"].lower().strip()
-        duration = word["end"] - word["start"]
-
-        if word_text in filler_words:
-            filler_flags.append({
-                "type": "explicit_filler",
-                "word": word["word"],
-                "start": word["start"],
-                "end": word["end"],
-                "probability": float(word["probability"])
-            })
-
-        if duration > 1.2 and word_text in filler_words:
-            filler_flags.append({
-                "type": "stretched_filler",
-                "word": word["word"],
-                "start": word["start"],
-                "end": word["end"],
-                "duration": duration
-            })
-
-        if word["probability"] < 0.4:
-            filler_flags.append({
-                "type": "low_confidence_possible_filler",
-                "word": word["word"],
-                "start": word["start"],
-                "end": word["end"],
-                "probability": float(word["probability"])
-            })
-
-    return {
-        "transcript": full_text.strip(),
-        "words": words,
-        "likely_fillers": filler_flags,
-        "filler_count": len(filler_flags),
-        "filler_words": list({f['word'].lower().strip() for f in filler_flags}),
-        "pauses": pauses
-    }
 
 # ------------------ 3.3. Transcribe Audio (USING DEEPGRAM API) ------------------ #
-import asyncio
+''' import asyncio
 from deepgram import Deepgram
 
 DEEPGRAM_API_KEY = os.getenv("DEEPGRAM_API_KEY")  # Load from .env
@@ -257,7 +172,7 @@ def transcribe_audio_deepgram(audio_path):
             "fillers": fillers,
             "words": words
         }
-    return asyncio.run(transcribe_async())
+    return asyncio.run(transcribe_async()) '''
 
 
 # ------------------ 3.3b. Transcribe Audio (USING OPENAI WHISPER API) ------------------ #
@@ -293,27 +208,27 @@ def transcribe_audio_whisper(audio_path):
 
     
 # ------------------ 4. Grammar Check ------------------ #
-tool = language_tool_python.LanguageTool('en-US')
+#tool = language_tool_python.LanguageTool('en-US')
 
-def check_grammar(text):
-    matches = tool.check(text)
-    return matches
+#def check_grammar(text):
+#    matches = tool.check(text)
+#    return matches
 
 # ------------------ 5. Analyze Speech ------------------ #
-def analyze_audio(file_path):
-    snd = parselmouth.Sound(file_path)
-    pitch = snd.to_pitch()
-    duration = snd.duration
+#def analyze_audio(file_path):
+#    snd = parselmouth.Sound(file_path)
+#    pitch = snd.to_pitch()
+#    duration = snd.duration
     pitch_values = pitch.selected_array['frequency']
-    pitch_values = pitch_values[pitch_values != 0]
-    avg_pitch = np.mean(pitch_values) if len(pitch_values) else 0
-    words_estimate = duration / 0.4
-    words_per_min = (words_estimate / duration) * 60
-    return {
-        "duration": round(duration, 2),
-        "avg_pitch_hz": round(avg_pitch, 2),
-        "estimated_wpm": round(words_per_min, 2)
-    }
+#    pitch_values = pitch_values[pitch_values != 0]
+#    avg_pitch = np.mean(pitch_values) if len(pitch_values) else 0
+#    words_estimate = duration / 0.4
+#    words_per_min = (words_estimate / duration) * 60
+#    return {
+#        "duration": round(duration, 2),
+#        "avg_pitch_hz": round(avg_pitch, 2),
+#        "estimated_wpm": round(words_per_min, 2)
+#    }
 
 # ------------------ 6. Evaluate Answer ------------------ #
 def evaluate_answer(transcript, audio_metrics, expected_keywords):
@@ -331,12 +246,12 @@ def evaluate_answer(transcript, audio_metrics, expected_keywords):
 
 # ------------------ 7. API Callable Evaluation Function ------------------ #
 def run_full_evaluation(question, keywords, audio_file, use_deepgram=True):
-    transcript_data = transcribe_audio_deepgram(audio_file)
+    transcript_data = transcribe_audio_whisper(audio_file)
     transcript = transcript_data["transcript"]
-    audio_metrics = analyze_audio(audio_file)
+  #  audio_metrics = analyze_audio(audio_file)
     # Let GPT handle all scoring and feedback
     try:
-        gpt_judgment = judge_answer_2(question, transcript, audio_metrics)
+        gpt_judgment = judge_answer_2(question, transcript, {})
         import json as _json
         gpt_result = _json.loads(gpt_judgment) if gpt_judgment.strip().startswith('{') else {}
     except Exception as e:
@@ -346,7 +261,7 @@ def run_full_evaluation(question, keywords, audio_file, use_deepgram=True):
     return {
         "transcript": transcript,
         "transcript_data": transcript_data,
-        "audio_metrics": audio_metrics,
+        "audio_metrics": {},
         "evaluation": gpt_result,
         "gpt_judgment": gpt_judgment
     }
