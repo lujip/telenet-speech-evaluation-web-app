@@ -1,18 +1,38 @@
+# Core Flask web framework packages
 flask
 flask-cors
+
+# Audio processing and text-to-speech
 pyttsx3
 sounddevice
 soundfile
-whisper
-language_tool_python
-praat-parselmouth
 numpy
+pywin32                    # Required for pyttsx3 on Windows (pythoncom)
+
+# AI and API integration
 openai
-faster-whisper
-deepgram-sdk==2.12.0
-python-dotenv
-watchdog
+
+# Authentication and security
 PyJWT
+
+# Database
+pymongo
+
+# Environment and configuration
+python-dotenv
+
+# HTTP requests
+requests
+
+# Commented out packages - currently unused but kept for potential future use
+#whisper                    # OpenAI Whisper for speech recognition - not currently used
+#language_tool_python       # Grammar checking - not currently used
+#praat-parselmouth          # Speech analysis - not currently used  
+#faster-whisper             # Faster Whisper implementation - not currently used
+#deepgram-sdk==2.12.0       # Deepgram speech recognition API - not currently used
+#watchdog                   # File system monitoring - not currently used
+
 # System dependencies required:
 # - ffmpeg (for audio conversion)
-# - Praat (for parselmouth, if not included) 
+# - Praat (for parselmouth, if not included)
+# - MongoDB (for database operations) 

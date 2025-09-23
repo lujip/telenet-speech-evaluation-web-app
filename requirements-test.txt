@@ -1,5 +1,12 @@
 # Test dependencies for Speech Evaluation Application Test Suite
-requests>=2.31.0
-selenium>=4.15.0
-numpy>=1.24.0
-webdriver-manager>=4.0.0 
+
+# Core testing packages
+requests>=2.31.0           # For HTTP API testing
+selenium>=4.15.0           # For browser automation testing  
+webdriver-manager>=4.0.0   # For managing browser drivers
+
+# Data processing for test utilities
+numpy>=1.24.0              # For audio data generation in tests
+
+# Additional packages that may be needed for comprehensive testing
+# (install main requirements.txt first for full functionality) 
