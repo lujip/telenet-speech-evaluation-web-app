@@ -182,7 +182,7 @@ OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")  # Load from .env
 
 def transcribe_audio_whisper(audio_path):
     """
-    Transcribe audio using OpenAI Whisper API.
+    Transcribe audio using OpenAI Whisper API, forcing English transcription.
     Returns a dict with 'transcript' and 'words' (if available).
     """
     api_url = "https://api.openai.com/v1/audio/transcriptions"
@@ -195,8 +195,8 @@ def transcribe_audio_whisper(audio_path):
         }
         data = {
             "model": "whisper-1",
-            "response_format": "text"
-            # You can add "language": "en" or "tl" if you want to force a language, but for code-switching, leave it out.
+            "response_format": "text",
+            "language": "en"  # Force English transcription
         }
         response = requests.post(api_url, headers=headers, files=files, data=data)
         response.raise_for_status()

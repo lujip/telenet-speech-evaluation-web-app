@@ -4,40 +4,40 @@
       "id": 1,
       "title": "Basic Customer Service",
       "difficulty": "easy",
-      "word_count": 45,
-      "text": "Welcome to our customer service team. We are here to help you with any questions or concerns you may have. Our goal is to provide excellent service and ensure your satisfaction. Please let us know how we can assist you today.",
+      "word_count": 132,
+      "text": "Welcome to our customer service team. We are here to help you with any questions or concerns you may have. Our goal is to provide excellent service and ensure your satisfaction. Please let us know how we can assist you today. Our representatives are trained to handle a wide variety of situations, from simple inquiries to more complex issues. We value your feedback and strive to continuously improve our services. If you have suggestions or comments, please do not hesitate to share them with us. Your experience matters, and we are committed to making every interaction positive and productive. Thank you for choosing our company, and we look forward to serving you now and in the future. Remember, your satisfaction is our top priority, and we are always here to help you in any way we can.",
       "category": "customer_service"
     },
     {
       "id": 2,
       "title": "Technical Support",
       "difficulty": "medium", 
-      "word_count": 67,
-      "text": "Thank you for contacting technical support. I understand you're experiencing issues with your account. Let me help you resolve this problem step by step. First, I'll need to verify your identity and then we can work together to find a solution.",
+      "word_count": 128,
+      "text": "Thank you for contacting technical support. I understand you're experiencing issues with your account. Let me help you resolve this problem step by step. First, I'll need to verify your identity and then we can work together to find a solution. Our technical support team is available around the clock to assist you with any technical difficulties you may encounter. We recommend having your account information ready to expedite the process. If you have tried troubleshooting steps already, please let us know what you have attempted so far. Our goal is to resolve your issue as quickly and efficiently as possible. If necessary, we can escalate your case to a specialist who will follow up with you directly. Thank you for your patience and cooperation as we work to restore your service.",
       "category": "technical"
     },
     {
       "id": 3,
       "title": "Sales and Marketing",
       "difficulty": "medium",
-      "word_count": 89,
-      "text": "We're excited to introduce our new product line designed specifically for your business needs. Our comprehensive solution offers advanced features, competitive pricing, and exceptional customer support. Contact us today to learn more about how we can help grow your business.",
+      "word_count": 135,
+      "text": "We're excited to introduce our new product line designed specifically for your business needs. Our comprehensive solution offers advanced features, competitive pricing, and exceptional customer support. Contact us today to learn more about how we can help grow your business. Our sales representatives are available to answer any questions you may have about our products and services. We also offer personalized consultations to ensure you select the best options for your organization. In addition, our marketing team can provide resources and strategies to help you maximize your investment. We believe in building long-term partnerships with our clients and are dedicated to your success. Reach out to us for more information, and let us show you how our solutions can make a difference for your business.",
       "category": "sales"
     },
     {
       "id": 4,
       "title": "Problem Resolution",
       "difficulty": "hard",
-      "word_count": 112,
-      "text": "I apologize for the inconvenience you've experienced. Let me assure you that we take all customer feedback seriously and are committed to resolving this issue promptly. I'll escalate your case to our specialized team and ensure you receive a comprehensive solution within the next business day.",
+      "word_count": 142,
+      "text": "I apologize for the inconvenience you've experienced. Let me assure you that we take all customer feedback seriously and are committed to resolving this issue promptly. I'll escalate your case to our specialized team and ensure you receive a comprehensive solution within the next business day. In the meantime, please provide any additional details that may help us better understand the situation. Our team will keep you updated throughout the resolution process and will follow up to confirm that the issue has been fully addressed. Your satisfaction is extremely important to us, and we appreciate your patience as we work to resolve this matter. If you have any further questions or concerns, please do not hesitate to reach out. Thank you for giving us the opportunity to make things right.",
       "category": "resolution"
     },
     {
       "id": 5,
       "title": "General Communication",
       "difficulty": "easy",
-      "word_count": 38,
-      "text": "Hello, thank you for reaching out to us. We appreciate your patience and look forward to assisting you. Is there anything specific you'd like to discuss or any questions I can answer for you?",
+      "word_count": 124,
+      "text": "Hello, thank you for reaching out to us. We appreciate your patience and look forward to assisting you. Is there anything specific you'd like to discuss or any questions I can answer for you? Our team is dedicated to providing clear and helpful communication at all times. If you need clarification on any topic, please let us know. We value open dialogue and encourage you to share your thoughts and concerns. Our goal is to ensure you feel heard and supported throughout your experience with us. Whether you have a simple question or a more complex issue, we are here to help. Thank you for choosing our company, and we hope to exceed your expectations with our service.",
       "category": "general"
     }
   ]
