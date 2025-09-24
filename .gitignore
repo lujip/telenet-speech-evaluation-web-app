@@ -35,7 +35,7 @@ backend/dmypy.json
 # Temporary files
 *.tmp
 *.temp
-*.wav
+#*.wav
 *.webm
 *.mp3
 *.mp4
