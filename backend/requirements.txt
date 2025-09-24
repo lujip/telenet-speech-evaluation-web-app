@@ -7,7 +7,7 @@ pyttsx3
 sounddevice
 soundfile
 numpy
-pywin32                    # Required for pyttsx3 on Windows (pythoncom)
+#pywin32                    # Required for pyttsx3 on Windows (pythoncom)
 
 # AI and API integration
 openai

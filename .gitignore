@@ -14,7 +14,7 @@ dist-ssr
 .env
 
 # Backend data and recordings
-backend/data/
+backend/data/temp_applicants
 backend/recordings/
 backend/venv/
 backend/__pycache__/

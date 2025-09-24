@@ -16,11 +16,14 @@ def create_app():
     """Create and configure the Flask application"""
     app = Flask(__name__)
     # Simple CORS configuration
-    CORS(app, origins=["https://localhost:5173",
+    CORS(app, origins=[
+    "https://localhost:5173",
     "https://192.168.77.123:5173",
+    "https://192.168.77.74:5173", # ← tele mongo https
     "https://localhost:3000",
     "https://192.168.77.123:3000",
     "http://localhost:3000",           # ← Add this
+    "http://192.168.77.74:5173",         # ← tele mongo http
     "http://192.168.77.123:3000"], supports_credentials=True)
     
     # Enable Flask's built-in reloader
