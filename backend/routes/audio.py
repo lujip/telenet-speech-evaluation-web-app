@@ -142,7 +142,7 @@ def evaluate_listening_test():
             from test_eval import transcribe_audio_deepgram #old
             from test_eval import transcribe_audio_whisper #new
             #transcription_result = transcribe_audio_deepgram(audio_wav_path)  # Transcribe audio
-            transcription_result = transcribe_audio_deepgram(audio_wav_path)  # Transcribe audio
+            transcription_result = transcribe_audio_whisper(audio_wav_path)  # Transcribe audio
             transcript = transcription_result.get("transcript", "").strip()  # Get transcript text
             print(f"Transcription successful: {transcript}")
     except Exception as e:  # Handle transcription errors
