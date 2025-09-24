@@ -139,7 +139,7 @@ def evaluate_listening_test():
             transcript = "Transcription failed - file not found"
         else:
             print(f"Transcribing file: {audio_wav_path}")
-            from test_eval import transcribe_audio_deepgram #old
+            #from test_eval import transcribe_audio_deepgram #old
             from test_eval import transcribe_audio_whisper #new
             #transcription_result = transcribe_audio_deepgram(audio_wav_path)  # Transcribe audio
             transcription_result = transcribe_audio_whisper(audio_wav_path)  # Transcribe audio
