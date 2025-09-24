@@ -1,0 +1,44 @@
+{
+  "typing_tests": [
+    {
+      "id": 1,
+      "title": "Basic Customer Service",
+      "difficulty": "easy",
+      "word_count": 45,
+      "text": "Welcome to our customer service team. We are here to help you with any questions or concerns you may have. Our goal is to provide excellent service and ensure your satisfaction. Please let us know how we can assist you today.",
+      "category": "customer_service"
+    },
+    {
+      "id": 2,
+      "title": "Technical Support",
+      "difficulty": "medium", 
+      "word_count": 67,
+      "text": "Thank you for contacting technical support. I understand you're experiencing issues with your account. Let me help you resolve this problem step by step. First, I'll need to verify your identity and then we can work together to find a solution.",
+      "category": "technical"
+    },
+    {
+      "id": 3,
+      "title": "Sales and Marketing",
+      "difficulty": "medium",
+      "word_count": 89,
+      "text": "We're excited to introduce our new product line designed specifically for your business needs. Our comprehensive solution offers advanced features, competitive pricing, and exceptional customer support. Contact us today to learn more about how we can help grow your business.",
+      "category": "sales"
+    },
+    {
+      "id": 4,
+      "title": "Problem Resolution",
+      "difficulty": "hard",
+      "word_count": 112,
+      "text": "I apologize for the inconvenience you've experienced. Let me assure you that we take all customer feedback seriously and are committed to resolving this issue promptly. I'll escalate your case to our specialized team and ensure you receive a comprehensive solution within the next business day.",
+      "category": "resolution"
+    },
+    {
+      "id": 5,
+      "title": "General Communication",
+      "difficulty": "easy",
+      "word_count": 38,
+      "text": "Hello, thank you for reaching out to us. We appreciate your patience and look forward to assisting you. Is there anything specific you'd like to discuss or any questions I can answer for you?",
+      "category": "general"
+    }
+  ]
+} 
