@@ -19,7 +19,7 @@ def create_app():
     CORS(app, origins=[
     "https://localhost:5173",
     "https://192.168.77.123:5173",
-    "http://192.168.77.74:5173", # ← tele mongo https
+    "https://192.168.77.74:5173", # ← tele mongo https
     "https://localhost:3000",
     "https://192.168.77.123:3000",
     "http://localhost:3000",           # ← Add this
