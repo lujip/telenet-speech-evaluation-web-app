@@ -21,6 +21,7 @@ def create_app():
     "https://localhost:3000",
     "https://192.168.77.123:3000",
     "http://localhost:3000",           # ← Add this
+    "http://192.168.77.74:3000",         # ← Add this
     "http://192.168.77.123:3000"], supports_credentials=True)
     
     # Enable Flask's built-in reloader
