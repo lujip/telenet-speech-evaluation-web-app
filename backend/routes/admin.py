@@ -331,7 +331,7 @@ def admin_delete_applicant(session_id):
                 return jsonify({"success": False, "message": f"Applicant with ID '{session_id}' not found"}), 404  # Return not found error
         
         # Save updated applicants data
-        # save_applicants(applicants_data) # This line was removed as per the new_code, as save_applicants is no longer imported.
+        save_applicants(applicants_data)
         
         # Clean up temporary files and recordings
         cleanup_temp_files(session_id)  # Remove temporary data files
