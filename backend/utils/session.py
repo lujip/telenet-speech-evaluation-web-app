@@ -13,6 +13,7 @@ def get_session_state(session_id):
             'questions': None,  # Questions not loaded yet
             'has_answered': set(),  # Track answered questions
             'listening_current_index': 0,  # Start at first listening question
+            'listening_questions': None,  # Listening questions not loaded yet
             'listening_has_answered': set(),  # Track answered listening questions
             'test_completion': {  # Track which tests are completed
                 'listening': False,
@@ -189,8 +190,15 @@ def get_test_completion_status(session_id):
     
     return state['test_completion'].copy()  # Return copy of completion status
 
-def get_active_listening_test_questions():
-    """Get all active listening test questions (randomized, max 5 per session)"""
+def get_active_listening_test_questions_for_session(session_id):
+    """Get active listening test questions for a specific session (randomized once per session)"""
+    state = get_session_state(session_id)  # Get current session state
+    
+    # If we already have session listening questions, return them
+    if state['listening_questions'] is not None:  # Check if listening questions already loaded
+        return state['listening_questions']  # Return cached listening questions
+    
+    # Otherwise, randomize and store for this session
     all_questions = load_listening_test_questions()  # Load all listening test questions
     active_questions = [q for q in all_questions if q.get("active", True)]  # Filter active questions only
     
@@ -199,7 +207,18 @@ def get_active_listening_test_questions():
         random.shuffle(active_questions)  # Randomize question order
         active_questions = active_questions[:5]  # Limit to 5 questions per session
     
-    return active_questions  # Return active questions list
+    # Store for this session
+    state['listening_questions'] = active_questions  # Cache listening questions for this session
+    set_session_state(session_id, state)  # Save updated state
+    return active_questions  # Return active listening questions list
+
+def get_active_listening_test_questions():
+    """Get all active listening test questions (deprecated - use session-specific version)"""
+    # This function is kept for backward compatibility but should not be used
+    # for session-based question management to avoid duplicates
+    all_questions = load_listening_test_questions()  # Load all listening test questions
+    active_questions = [q for q in all_questions if q.get("active", True)]  # Filter active questions only
+    return active_questions  # Return active questions list without randomization
 
 def get_listening_test_question_by_id(question_id):
     """Get a specific listening test question by ID"""

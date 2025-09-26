@@ -35,6 +35,32 @@
   line-height: 1.6;
 }
 
+/* Lobby Instruction */
+.lobby-instruction {
+  background: linear-gradient(135deg, #e0f2fe 0%, #b3e5fc 100%);
+  border: 2px solid #0288d1;
+  border-radius: 16px;
+  padding: 1.5rem 2rem;
+  margin-bottom: 2rem;
+  text-align: center;
+  box-shadow: 0 4px 15px rgba(2, 136, 209, 0.2);
+}
+
+.lobby-instruction-title {
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: #0277bd;
+  margin: 0 0 0.5rem 0;
+}
+
+.lobby-instruction-text {
+  font-size: 1.1rem;
+  color: #01579b;
+  margin: 0;
+  font-weight: 500;
+  line-height: 1.5;
+}
+
 /* Completion Summary */
 .completion-summary {
   background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
@@ -174,6 +200,18 @@
   
   .completion-subtitle {
     font-size: 1.1rem;
+  }
+  
+  .lobby-instruction {
+    padding: 1.2rem 1.5rem;
+  }
+  
+  .lobby-instruction-title {
+    font-size: 1.2rem;
+  }
+  
+  .lobby-instruction-text {
+    font-size: 1rem;
   }
   
   .completion-summary {

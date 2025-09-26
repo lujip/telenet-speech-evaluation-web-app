@@ -3,7 +3,7 @@ from utils.session import (
     get_active_questions_for_session, get_session_state, set_session_state,
     get_current_question_for_session, move_to_next_question, 
     mark_question_answered, get_question_status, reset_session_questions,
-    get_active_listening_test_questions, get_question_by_index
+    get_active_listening_test_questions_for_session, get_question_by_index
 )
 from utils.tts import speak_async
 from utils.file_ops import (
@@ -160,7 +160,7 @@ def get_current_listening_test_question():
         return jsonify({"text": "Session ID required", "keywords": []}), 400
     
     # Get session-specific listening test questions and state
-    questions = get_active_listening_test_questions()  # Load active listening test questions
+    questions = get_active_listening_test_questions_for_session(session_id)  # Load session-specific listening test questions
     state = get_session_state(session_id)  # Get current session state
     current_index = state.get('listening_current_index', 0)  # Get current listening question index
     
@@ -194,7 +194,7 @@ def get_listening_test_question_count():
         return jsonify({"total": 0, "current": 0}), 400
     
     # Get session-specific listening test questions and state
-    questions = get_active_listening_test_questions()  # Load active listening test questions
+    questions = get_active_listening_test_questions_for_session(session_id)  # Load session-specific listening test questions
     state = get_session_state(session_id)  # Get current session state
     current_index = state.get('listening_current_index', 0)  # Get current listening question index
     
@@ -213,7 +213,7 @@ def listening_test_next_question():
         return jsonify({"success": False, "message": "Session ID required"}), 400
     
     # Get session-specific listening test questions and state
-    questions = get_active_listening_test_questions()  # Load active listening test questions
+    questions = get_active_listening_test_questions_for_session(session_id)  # Load session-specific listening test questions
     state = get_session_state(session_id)  # Get current session state
     current_index = state.get('listening_current_index', 0)  # Get current listening question index
     
@@ -265,11 +265,12 @@ def listening_test_reset():
     # Reset listening test session state
     state = get_session_state(session_id)  # Get current session state
     state['listening_current_index'] = 0  # Reset to first question
+    state['listening_questions'] = None  # Clear cached questions to force regeneration
     state['listening_has_answered'] = set()  # Clear answered questions tracking
     set_session_state(session_id, state)  # Save reset state
     
-    # Get session-specific listening test questions
-    questions = get_active_listening_test_questions()  # Load active listening test questions
+    # Get session-specific listening test questions (will regenerate with new randomization)
+    questions = get_active_listening_test_questions_for_session(session_id)  # Load session-specific listening test questions
     
     print(f"DEBUG: Session {session_id} - Resetting listening test questions, new index: {state['listening_current_index']}")
     print(f"DEBUG: Session {session_id} - Loaded {len(questions)} active listening test questions after reset")

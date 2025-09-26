@@ -21,6 +21,13 @@ const CompletionPage = () => {
         <h1 className="completion-title">🎉 Evaluation Complete!</h1>
         <p className="completion-subtitle">Congratulations! You have successfully completed all three parts of the evaluation.</p>
 
+        <div className="lobby-instruction">
+          <h2 className="lobby-instruction-title">📍 Next Steps</h2>
+          <p className="lobby-instruction-text">
+            Please proceed to the lobby and wait for further instructions from our team.
+          </p>
+        </div>
+
         <div className="completion-summary">
           <h2>What You Completed:</h2>
           <div className="test-summary">
@@ -60,7 +67,7 @@ const CompletionPage = () => {
 
         <div className="completion-actions">
           <button onClick={handleStartNew} className="action-button primary">
-            🆕 Start New Application
+            Start New Application
           </button>
         </div>
 

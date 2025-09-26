@@ -141,6 +141,25 @@
   color: #718096;
   cursor: not-allowed;
   box-shadow: 0 2px 8px rgba(160, 174, 192, 0.3);
+  transform: none;
+}
+
+.play-button:disabled:hover {
+  transform: none;
+  box-shadow: 0 2px 8px rgba(160, 174, 192, 0.3);
+}
+
+.play-button.played {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: white;
+  cursor: not-allowed;
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+  opacity: 0.7;
+}
+
+.play-button.played:hover {
+  transform: none;
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
 }
 
 .stop-audio-button {

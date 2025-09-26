@@ -22,6 +22,7 @@
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [submissionComplete, setSubmissionComplete] = useState(false);
+    const [hasPlayedAudio, setHasPlayedAudio] = useState(false);
     
     // Session timer state (10 minutes)
     const [sessionTimeLeft, setSessionTimeLeft] = useState(600); // 10 minutes in seconds
@@ -93,6 +94,7 @@
             setCurrentQuestion(questionResponse.data.text);
             setCurrentAudioId(questionResponse.data.audio_id || '');
             setCurrentQuestionIndex(0);
+            setHasPlayedAudio(false); // Reset audio played state for first question
             
             // Start session timer
             setIsSessionStarted(true);
@@ -107,7 +109,7 @@
     };
 
     const playQuestion = async () => {
-      if (!currentAudioId) return;
+      if (!currentAudioId || hasPlayedAudio) return;
       
       try {
         setIsPlaying(true);
@@ -129,6 +131,7 @@
           audio.onended = () => {
             setIsPlaying(false);
             setAudioElement(null);
+            setHasPlayedAudio(true); // Mark audio as played
           };
           
           audio.onerror = () => {
@@ -332,6 +335,7 @@
           setCurrentAudioId(response.data.question.audio_id || '');
           setCurrentQuestionIndex(response.data.currentIndex);
           setHasAnswered(false);
+          setHasPlayedAudio(false); // Reset audio played state for new question
         } else {
           // No more questions, test complete
           handleTestComplete();
@@ -452,6 +456,7 @@
                 <h3>Instructions:</h3>
                 <ul>
                   <li>Click the "Play Audio" button to hear the audio phrase</li>
+                  <li><strong style={{color: '#ef4444'}}>⚠️ Important: You can only play each audio phrase ONCE</strong></li>
                   <li>Listen carefully to the pronunciation and intonation</li>
                   <li>Click "Start Recording" when you're ready to repeat</li>
                   <li>Speak clearly and try to match the audio exactly</li>
@@ -466,16 +471,18 @@
             <div className="audio-controls">
               <button 
                 onClick={playQuestion} 
-                disabled={isPlaying || !currentAudioId}
-                className="play-button"
+                disabled={isPlaying || !currentAudioId || hasPlayedAudio}
+                className={`play-button ${hasPlayedAudio ? 'played' : ''}`}
               >
-                {isPlaying ? '🔊 Playing...' : '🔊 Play Audio'}
+                {isPlaying ? '🔊 Playing...' : hasPlayedAudio ? '🔊 Audio Played' : '🔊 Play Audio'}
               </button>
             </div>
             
             <p className="audio-note">
               {currentAudioId 
-                ? 'Click the button above to hear the audio phrase you need to repeat'
+                ? hasPlayedAudio 
+                  ? '⚠️ Audio has been played. You cannot replay it.'
+                  : '🎧 Click the button above to hear the audio phrase you need to repeat (only once!)'
                 : 'Audio not available for this question'
               }
             </p>
