@@ -663,12 +663,12 @@ const Admin = () => {
               // List View
               <div className="applicants-list-container">
                 <div className="list-header">
+                  <div className="list-header-item applied">Applied</div>
                   <div className="list-header-item name">Name</div>
-                  <div className="list-header-item email">Email / Gender</div>
+                  {/* <div className="list-header-item email">Email / Gender</div> */}
                   <div className="list-header-item position">Position</div>
                   <div className="list-header-item status">Status</div>
                   <div className="list-header-item scores">Test Scores</div>
-                  <div className="list-header-item applied">Applied</div>
                   <div className="list-header-item actions">Actions</div>
                 </div>
                 {currentItems.map((applicant, index) => {
@@ -679,15 +679,22 @@ const Admin = () => {
                   
                   return (
                     <div key={`${applicant.id}_${index}`} className="applicant-list-item">
+                      <div className="list-item-content applied">
+                        <div className="applied-date">{formatDate(applicant.application_timestamp)}</div>
+                        {applicant.completion_timestamp && (
+                          <div className="completed-date">{formatDate(applicant.completion_timestamp)}</div>
+                        )}
+                      </div>
+                      
                       <div className="list-item-content name">
                         <div className="applicant-name">{fullName}</div>
                         <div className="applicant-phone">{applicant.applicant_info?.cellphoneNumber || applicant.applicant_info?.landlineNumber || 'N/A'}</div>
                       </div>
                       
-                      <div className="list-item-content email">
+                      {/* <div className="list-item-content email">
                         <div className="applicant-email">{applicant.applicant_info?.email || 'N/A'}</div>
                         <div className="applicant-gender"><span className="gender-label">Gender:</span> {applicant.applicant_info?.gender || 'N/A'}</div>
-                      </div>
+                      </div> */}
                       
                       <div className="list-item-content position">
                         <div className="applicant-position">{applicant.applicant_info?.positionApplied || 'N/A'}</div>
@@ -752,13 +759,6 @@ const Admin = () => {
                           */}
                           
                         </div>
-                      </div>
-                      
-                      <div className="list-item-content applied">
-                        <div className="applied-date">{formatDate(applicant.application_timestamp)}</div>
-                        {applicant.completion_timestamp && (
-                          <div className="completed-date">{formatDate(applicant.completion_timestamp)}</div>
-                        )}
                       </div>
                       
                       <div className="list-item-content actions">
