@@ -387,17 +387,45 @@ const Admin = () => {
       ? applicant.typing_test.reduce((sum, evalItem) => sum + (evalItem.words_per_minute || 0), 0) / applicant.typing_test.length
       : 0;
     
+    // Calculate personality score: categories passed / total categories
+    let personalityPassed = 0;
+    let personalityTotal = 0;
+    if (applicant.personality_test && applicant.personality_test.length > 0) {
+      const personalityData = applicant.personality_test[0]; // Get first personality test result
+      if (personalityData && personalityData.category_analysis) {
+        const categories = Object.keys(personalityData.category_analysis);
+        personalityTotal = categories.length;
+        personalityPassed = categories.filter(cat => 
+          personalityData.category_analysis[cat].passed === true
+        ).length;
+      }
+    }
+    
+    // Calculate merged score: (Listening + Speech) / 2
+    const mergedScore = (parseFloat(speechScore) + parseFloat(listeningScore)) / 2;
+    const passFail = mergedScore >= 7.0 ? 'PASS' : 'FAIL';
+    
     return {
       speech: speechScore.toFixed(1),
       listening: listeningScore.toFixed(1),
       written: writtenScore.toFixed(1),
-      typing: typingScore.toFixed(1)
+      typing: typingScore.toFixed(1),
+      personality: `${personalityPassed}/${personalityTotal}`,
+      merged: mergedScore.toFixed(1),
+      passFail: passFail
     };
   };
 
   const formatDate = (dateString) => {
     if (!dateString) return 'N/A';
-    return new Date(dateString).toLocaleString();
+    return new Date(dateString).toLocaleString('en-US', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true
+    });
   };
 
   // Login Form
@@ -602,7 +630,7 @@ const Admin = () => {
                       </div>
                       <div className="stat-item">
                         <span>Listening Score:</span>
-                        <span>{getTestScores(applicant).listening}%</span>
+                        <span>{(parseFloat(getTestScores(applicant).listening) / 10).toFixed(1)}/10</span>
                       </div>
                       <div className="stat-item">
                         <span>Written Score:</span>
@@ -679,28 +707,57 @@ const Admin = () => {
                       </div>
                       
                       <div className="list-item-content scores">
-                        <div className="score-row">
-                          <span className="score-label">Speech:</span>
-                          <span className="score-value">{testScores.speech}/10</span>
-                        </div>
-                        <div className="score-row">
-                          <span className="score-label">Listen:</span>
-                          <span className="score-value">{testScores.listening}%</span>
-                        </div>
-                        <div className="score-row">
-                          <span className="score-label">Written:</span>
-                          <span className="score-value">{testScores.written}%</span>
-                        </div>
-                        <div className="score-row">
-                          <span className="score-label">Typing:</span>
-                          <span className="score-value">{testScores.typing} WPM</span>
+                        <div className="scores-grid-container">
+                          <div className="score-row">
+                            <span className="score-label">Speech:</span>
+                            <span className="score-value">{testScores.speech}/10</span>
+                          </div>
+                          <div className="score-row">
+                            <span className="score-label">Personality:</span>
+                            <span className="score-value">{testScores.personality}</span>
+                          </div>
+                          <div className="score-row">
+                            <span className="score-label">Listen:</span>
+                            <span className="score-value">{(parseFloat(testScores.listening) / 10).toFixed(1)}/10</span>
+                          </div>
+                          <div className="score-row">
+                            <span className="score-label">Written:</span>
+                            <span className="score-value">{testScores.written}%</span>
+                          </div>
+                          
+                          <div className="score-row">
+                            <span className="score-label">Score:</span>
+                            <span 
+                              className="score-value"
+                              style={{ color: parseFloat(testScores.merged) >= 7.0 ? '#10b981' : '#ef4444' }}
+                            >
+                              {testScores.merged}/10 ({testScores.passFail})
+                            </span>
+                          </div>
+                          <div className="score-row">
+                            <span className="score-label">Typing:</span>
+                            <span className="score-value">{testScores.typing} WPM</span>
+                          </div>
+                          
+                         {/*} <div className="score-row">
+                            <span className="score-label">Placeholder2:</span>
+                            <span className="score-value">101</span>
+                          </div>
+                          
+                          
+                          <div className="score-row">
+                            <span className="score-label">Placeholder3:</span>
+                            <span className="score-value">101</span>
+                          </div>
+                          */}
+                          
                         </div>
                       </div>
                       
                       <div className="list-item-content applied">
                         <div className="applied-date">{formatDate(applicant.application_timestamp)}</div>
                         {applicant.completion_timestamp && (
-                          <div className="completed-date">✅ {formatDate(applicant.completion_timestamp)}</div>
+                          <div className="completed-date">{formatDate(applicant.completion_timestamp)}</div>
                         )}
                       </div>
                       
@@ -710,14 +767,14 @@ const Admin = () => {
                           className="list-action-button details-button"
                           title="View Details"
                         >
-                          📋 Details
+                          Details
                         </button>
                         <button
                           onClick={() => handleDeleteApplicant(applicant.id)}
                           className="list-action-button delete-button"
                           title="Delete Applicant"
                         >
-                          🗑️ Delete
+                          Delete
                         </button>
                       </div>
                     </div>

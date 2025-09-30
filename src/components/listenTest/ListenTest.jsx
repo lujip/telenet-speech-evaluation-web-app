@@ -432,8 +432,7 @@
               <div className="progress-info">
                 Question {currentQuestionIndex + 1} of {totalQuestions}
               </div>
-            </div>
-            <div className="header-right">
+              
               <div className="session-timer-container">
                 <span 
                   className={`session-time-remaining ${sessionTimeLeft <= 60 ? 'warning' : ''}`}
@@ -452,6 +451,8 @@
                   ⏰ Time Left: {formatTime(sessionTimeLeft)}
                 </span>
               </div>
+            </div>
+            <div className="header-right">
               <div className="instructions">
                 <h3>Instructions:</h3>
                 <ul>

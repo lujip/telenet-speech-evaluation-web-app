@@ -83,7 +83,7 @@
   gap: 1rem;
 }
 
-.test-item {
+.completion-page-test-item {
   display: flex;
   align-items: center;
   gap: 1rem;
@@ -95,17 +95,17 @@
   box-shadow: 0 2px 8px rgba(0,0,0,0.05);
 }
 
-.test-item:hover {
+.completion-page-test-item:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 15px rgba(0,0,0,0.1);
 }
 
-.test-item.completed {
+.completion-page-test-item.completed {
   border-color: #10b981;
   background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
 }
 
-.completion-page .test-icon {
+.completion-page-test-icon {
   font-size: 1.5rem;
   width: 50px;
   height: 50px;

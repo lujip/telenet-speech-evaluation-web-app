@@ -17,7 +17,9 @@ def get_session_state(session_id):
             'listening_has_answered': set(),  # Track answered listening questions
             'test_completion': {  # Track which tests are completed
                 'listening': False,
+                'written': False,
                 'speech': False,
+                'personality': False,
                 'typing': False
             }
         }
@@ -144,6 +146,7 @@ def mark_test_completed(session_id, test_type):
             'listening': False,
             'written': False,
             'speech': False,
+            'personality': False,
             'typing': False
         }
     state['test_completion'][test_type] = True  # Mark test as completed
@@ -157,11 +160,12 @@ def get_next_test_to_resume(session_id):
             'listening': False,
             'written': False,
             'speech': False,
+            'personality': False,
             'typing': False
         }
         set_session_state(session_id, state)  # Save updated state
     
-    test_order = ['listening', 'written', 'speech', 'typing']  # Define test order
+    test_order = ['listening', 'written', 'speech', 'personality', 'typing']  # Define test order
     
     # Find the first incomplete test
     for test_type in test_order:
@@ -179,6 +183,7 @@ def get_test_completion_status(session_id):
             'listening': False,
             'written': False,
             'speech': False,
+            'personality': False,
             'typing': False
         }
         set_session_state(session_id, state)  # Save updated state
@@ -186,6 +191,9 @@ def get_test_completion_status(session_id):
     # Ensure all test types are present in existing sessions
     if 'written' not in state['test_completion']:
         state['test_completion']['written'] = False
+        set_session_state(session_id, state)
+    if 'personality' not in state['test_completion']:
+        state['test_completion']['personality'] = False
         set_session_state(session_id, state)
     
     return state['test_completion'].copy()  # Return copy of completion status

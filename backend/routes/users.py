@@ -140,8 +140,8 @@ def create_new_user():
         # Create user
         new_user = create_user(data)
         if new_user:
-            # Return user info without password
-            user_response = {k: v for k, v in new_user.items() if k != 'password'}
+            # Return user info without password and _id
+            user_response = {k: v for k, v in new_user.items() if k not in ['password', '_id']}
             user_response['role_name'] = USER_ROLES.get(new_user.get('role'), {}).get('name', 'Unknown')
             
             return jsonify({
@@ -187,8 +187,8 @@ def update_existing_user(user_id):
         # Update user
         updated_user = update_user(user_id, data)
         if updated_user:
-            # Return user info without password
-            user_response = {k: v for k, v in updated_user.items() if k != 'password'}
+            # Return user info without password and _id
+            user_response = {k: v for k, v in updated_user.items() if k not in ['password', '_id']}
             user_response['role_name'] = USER_ROLES.get(updated_user.get('role'), {}).get('name', 'Unknown')
             
             return jsonify({

@@ -10,6 +10,7 @@ from routes.questions import questions_bp
 from routes.audio import audio_bp
 from routes.typing import typing_bp
 from routes.written import written_bp
+from routes.personality import personality_bp
 from routes.users import users_bp
 
 def create_app():
@@ -36,6 +37,7 @@ def create_app():
     app.register_blueprint(audio_bp)
     app.register_blueprint(typing_bp)
     app.register_blueprint(written_bp)
+    app.register_blueprint(personality_bp)
     app.register_blueprint(users_bp)
     
     # Add a simple test route to verify CORS

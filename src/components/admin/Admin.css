@@ -217,7 +217,7 @@
 
 .list-header {
   display: grid;
-  grid-template-columns: 2fr 1.5fr 1.5fr 1fr 1fr 1.5fr 1.5fr;
+  grid-template-columns: 2fr 1fr 1fr 1fr 1.5fr 1fr 0.5fr;
   gap: 15px;
   padding: 15px 20px;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -235,7 +235,7 @@
 
 .applicant-list-item {
   display: grid;
-  grid-template-columns: 2fr 1.5fr 1.5fr 1fr 1fr 1.5fr 1.5fr;
+  grid-template-columns: 2fr 1fr 1fr 1fr 1.8fr 1fr 0.5fr;
   gap: 15px;
   padding: 5px 20px;
   border-bottom: 2px solid #e0e5eb;
@@ -300,12 +300,23 @@
   max-width: fit-content;
 }
 
+.scores-grid-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0px 5px;
+  width: 100%;
+}
+
 .score-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 5px;
   font-size: 0.75rem;
+  border-left: 1px solid #a5a9ad;
+  padding-left: 5px;
+  border-right: 1px solid #a5a9ad;
+  padding-right: 5px;
 }
 
 .score-label {
@@ -333,34 +344,32 @@
 }
 
 .list-action-button {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border: 1px solid rgba(103, 126, 234, 0.3);
+  background: #667eea;
+  border: none;
   color: white;
   border-radius: 6px;
-  padding: 6px 8px;
+  padding: 8px 10px !important;
   cursor: pointer;
-  transition: all 0.3s ease;
-  font-size: 0.9rem;
+  font-size: 1rem;
+  font-weight: bold;
   margin: 2px;
+  width: 80px !important;
+  min-width: 80px !important;
+  text-align: center;
 }
 
 .list-action-button:hover {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  transform: translateY(-1px);
-  box-shadow: 0 2px 8px rgba(103, 126, 234, 0.3);
+  background: #5568d3;
 }
 
 .list-action-button.delete-button {
-  background: linear-gradient(135deg, #e53e3e 0%, #c53030 100%);
-  border-color: rgba(239, 68, 68, 0.3);
-  color: white;
+  background: #e53e3e !important;
+  font-size: 1rem !important;
+  width: 55px !important;
 }
 
 .list-action-button.delete-button:hover {
-  background: linear-gradient(135deg, #c53030 0%, #a52a2a 100%);
-  color: white;
-  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+  background: #c53030 !important;
 }
 
 .applicant-card {
@@ -762,6 +771,11 @@
   .list-item-content.email,
   .list-item-content.applied {
     display: none;
+  }
+
+  .scores-grid-container {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto;
   }
 
   .score-row {

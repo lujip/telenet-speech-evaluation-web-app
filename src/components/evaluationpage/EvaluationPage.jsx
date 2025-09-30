@@ -485,7 +485,7 @@ const EvaluationPage = ({ onComplete, onNext }) => {
         <h1 className="speech-title">Tele-net Speech Evaluation</h1>
         
         {/* Session Timer Header */}
-        <div className="test-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', padding: '10px 0', borderBottom: '2px solid #e0e0e0' }}>
+        <div className="test-header" >
           <div className="test-info">
             <span style={{ 
               fontSize: '16px', 

@@ -47,7 +47,6 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
   padding: 10px 0;
   border-bottom: 2px solid #e0e0e0;
 }
@@ -84,7 +83,8 @@
 
 .question-section {
   background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-  border-radius: 16px;
+  border-bottom-left-radius: 16px;
+  border-bottom-right-radius: 16px;
   padding: 1rem 2rem;
   margin: 0 0;
   border: 1px solid #e2e8f0;

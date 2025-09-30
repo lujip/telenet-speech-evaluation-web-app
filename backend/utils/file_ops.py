@@ -76,14 +76,19 @@ def load_applicants():
 
 
 def save_applicants(data):
-    """Save applicants data to MongoDB (replace all)."""
+    """Save applicants data to MongoDB (upsert individual records to preserve existing data)."""
     try:
-        # Remove all existing applicants (to match previous file overwrite behavior)
-        db.applicants.delete_many({})
-        # Insert new applicants
         applicants = data.get("applicants", [])
-        if applicants:
-            db.applicants.insert_many(applicants)
+        for applicant in applicants:
+            # Use upsert to update existing records or insert new ones
+            # This preserves other applicants in the database
+            applicant_id = applicant.get("id")
+            if applicant_id:
+                db.applicants.replace_one(
+                    {"id": applicant_id}, 
+                    applicant, 
+                    upsert=True
+                )
         return True
     except Exception as e:
         print(f"Error saving applicants: {e}")
@@ -140,6 +145,22 @@ def save_written_test_questions(questions_data):
         print(f"Error saving written test questions: {e}")
         return False
 
+def load_personality_test_questions():
+    """Load personality test questions from MongoDB."""
+    questions = list(db.personality_test_questions.find({}, {'_id': 0}))
+    return questions
+
+def save_personality_test_questions(questions_data):
+    """Save personality test questions to MongoDB (replace all)."""
+    try:
+        db.personality_test_questions.delete_many({})
+        if questions_data:
+            db.personality_test_questions.insert_many(questions_data)
+        return True
+    except Exception as e:
+        print(f"Error saving personality test questions: {e}")
+        return False
+
 def save_temp_applicant(applicant_data, session_id):
     """Store applicant data temporarily in MongoDB for later combination with evaluation."""
     try:
@@ -170,7 +191,7 @@ def save_temp_evaluation(evaluation_data, session_id, question_index=None, test_
         existing_data = load_temp_evaluation(session_id)
         if existing_data:
             # Merge with existing data, preserving segmented structure
-            for section in ['speech_eval', 'listening_test', 'written_test', 'typing_test']:
+            for section in ['speech_eval', 'listening_test', 'written_test', 'personality_test', 'typing_test']:
                 if section in evaluation_data:
                     existing_data[section] = evaluation_data[section]
         else:
@@ -179,9 +200,10 @@ def save_temp_evaluation(evaluation_data, session_id, question_index=None, test_
                 "speech_eval": [],
                 "listening_test": [],
                 "written_test": [],
+                "personality_test": [],
                 "typing_test": []
             }
-            for section in ['speech_eval', 'listening_test', 'written_test', 'typing_test']:
+            for section in ['speech_eval', 'listening_test', 'written_test', 'personality_test', 'typing_test']:
                 if section in evaluation_data:
                     existing_data[section] = evaluation_data[section]
         # If question_index is provided, store at specific index (not implemented for MongoDB, just store the structure)

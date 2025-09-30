@@ -507,9 +507,7 @@
 
 /* Session Timer Styles */
 .session-timer-container {
-  display: flex;
-  justify-content: flex-end;
-  margin-bottom: 1rem;
+  margin: 1rem 0;
 }
 
 .session-time-remaining {

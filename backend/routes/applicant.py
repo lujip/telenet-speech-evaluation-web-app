@@ -96,6 +96,7 @@ def finish_evaluation():
                     total_questions += len(evaluation_data.get("speech_eval", []))
                     total_questions += len(evaluation_data.get("listening_test", []))
                     total_questions += len(evaluation_data.get("written_test", []))
+                    total_questions += len(evaluation_data.get("personality_test", []))
                     total_questions += len(evaluation_data.get("typing_test", []))
                     combined_record["total_questions"] = total_questions
 
@@ -136,6 +137,7 @@ def finish_evaluation():
                     print(f"  - Speech evaluations: {len(evaluation_data.get('speech_eval', []))}")
                     print(f"  - Listening tests: {len(evaluation_data.get('listening_test', []))}")
                     print(f"  - Written tests: {len(evaluation_data.get('written_test', []))}")
+                    print(f"  - Personality tests: {len(evaluation_data.get('personality_test', []))}")
                     print(f"  - Typing tests: {len(evaluation_data.get('typing_test', []))}")
                     print(f"  - Total: {combined_record['total_questions']}")
 
@@ -145,6 +147,7 @@ def finish_evaluation():
             mark_test_completed(session_id, 'listening')
             mark_test_completed(session_id, 'written')
             mark_test_completed(session_id, 'speech')
+            mark_test_completed(session_id, 'personality')
             mark_test_completed(session_id, 'typing')
             print(f"All tests marked as completed for session {session_id}")
         except Exception as e:
@@ -194,11 +197,12 @@ def get_applicants():
                 total_questions += len(eval_data.get("speech_eval", []))
                 total_questions += len(eval_data.get("listening_test", []))
                 total_questions += len(eval_data.get("written_test", []))
+                total_questions += len(eval_data.get("personality_test", []))
                 total_questions += len(eval_data.get("typing_test", []))
                 formatted_applicant["total_questions"] = total_questions
                 
                 # Ensure all test segments are present
-                for segment in ["speech_eval", "listening_test", "written_test", "typing_test"]:
+                for segment in ["speech_eval", "listening_test", "written_test", "personality_test", "typing_test"]:
                     if segment not in formatted_applicant:
                         formatted_applicant[segment] = []
             else:
@@ -207,6 +211,7 @@ def get_applicants():
                     "speech_eval": [],
                     "listening_test": [],
                     "written_test": [],
+                    "personality_test": [],
                     "typing_test": []
                 })
             
@@ -222,22 +227,16 @@ def get_applicants():
             "applicants": applicants_data.get("applicants", []) + temp_applicants_formatted
         }
         
-        # Sort applicants by timestamp (newest first)
-        # Handle both 'application_timestamp' and 'last_updated' fields
+        # Sort applicants by application timestamp (newest first)
+        # Use application_timestamp to maintain chronological order of when applicants started
         def get_sort_timestamp(applicant):
-            # Get the most recent timestamp available
-            timestamps = []
+            # Prioritize application_timestamp to sort by when applicant started, not completed
             if applicant.get("application_timestamp"):
-                timestamps.append(applicant["application_timestamp"])
-            if applicant.get("last_updated"):
-                timestamps.append(applicant["last_updated"])
-            if applicant.get("completion_timestamp"):
-                timestamps.append(applicant["completion_timestamp"])
-            
-            # Return the most recent timestamp, or a default old date if none found
-            if timestamps:
-                return max(timestamps)
-            return "1970-01-01T00:00:00.000Z"  # Very old date for items without timestamps
+                return applicant["application_timestamp"]
+            elif applicant.get("last_updated"):
+                return applicant["last_updated"]
+            else:
+                return "1970-01-01T00:00:00.000Z"  # Very old date for items without timestamps
         
         all_applicants["applicants"].sort(key=get_sort_timestamp, reverse=True)
         
@@ -308,7 +307,7 @@ def mark_test_completed():
             return jsonify({"success": False, "message": "Session ID and test type required"}), 400
         
         # Validate test type
-        valid_test_types = ['listening', 'written', 'speech', 'typing']
+        valid_test_types = ['listening', 'written', 'speech', 'personality', 'typing']
         if test_type not in valid_test_types:
             return jsonify({"success": False, "message": f"Invalid test type. Must be one of: {valid_test_types}"}), 400
         

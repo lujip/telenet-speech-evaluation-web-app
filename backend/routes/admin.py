@@ -54,12 +54,13 @@ def find_applicant_data(applicant_id):
                 total_questions = 0
                 total_questions += len(eval_data.get("speech_eval", []))
                 total_questions += len(eval_data.get("listening_test", []))
-                total_questions += len(eval_data.get("written_test", []))  # Fixed: was missing
+                total_questions += len(eval_data.get("written_test", []))
+                total_questions += len(eval_data.get("personality_test", []))
                 total_questions += len(eval_data.get("typing_test", []))
                 applicant_entry["total_questions"] = total_questions
                 
                 # Ensure all test segments are present
-                for segment in ["speech_eval", "listening_test", "written_test", "typing_test"]:
+                for segment in ["speech_eval", "listening_test", "written_test", "personality_test", "typing_test"]:
                     if segment not in applicant_entry:
                         applicant_entry[segment] = []
         else:
@@ -68,6 +69,7 @@ def find_applicant_data(applicant_id):
                 "speech_eval": [],
                 "listening_test": [],
                 "written_test": [],
+                "personality_test": [],
                 "typing_test": []
             })
         
@@ -139,22 +141,16 @@ def admin_get_applicants():
             "applicants": main_applicants.get("applicants", []) + temp_applicants_formatted
         }
         
-        # Sort applicants by timestamp (newest first)
-        # Handle both 'application_timestamp' and 'last_updated' fields
+        # Sort applicants by application timestamp (newest first)
+        # Use application_timestamp to maintain chronological order of when applicants started
         def get_sort_timestamp(applicant):
-            # Get the most recent timestamp available
-            timestamps = []
+            # Prioritize application_timestamp to sort by when applicant started, not completed
             if applicant.get("application_timestamp"):
-                timestamps.append(applicant["application_timestamp"])
-            if applicant.get("last_updated"):
-                timestamps.append(applicant["last_updated"])
-            if applicant.get("completion_timestamp"):
-                timestamps.append(applicant["completion_timestamp"])
-            
-            # Return the most recent timestamp, or a default old date if none found
-            if timestamps:
-                return max(timestamps)
-            return "1970-01-01T00:00:00.000Z"  # Very old date for items without timestamps
+                return applicant["application_timestamp"]
+            elif applicant.get("last_updated"):
+                return applicant["last_updated"]
+            else:
+                return "1970-01-01T00:00:00.000Z"  # Very old date for items without timestamps
         
         all_applicants["applicants"].sort(key=get_sort_timestamp, reverse=True)
         

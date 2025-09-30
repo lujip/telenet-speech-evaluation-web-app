@@ -31,7 +31,7 @@ const LandingPage = () => {
           <h1>Welcome to the Tele-net Comprehensive Evaluation</h1>
           <p>
           This comprehensive assessment evaluates your skills across multiple areas for a potential role in our call center team. 
-          You'll complete four different types of tests: listening comprehension, written communication, speech evaluation, and typing skills.
+          You'll complete five different types of tests: listening comprehension, written communication, speech evaluation, personality assessment, and typing skills.
           </p>
         </section>
 
@@ -39,23 +39,28 @@ const LandingPage = () => {
         <section className="test-overview-section">
           <h2>Evaluation Components</h2>
           <div className="test-grid">
-            <div className="test-item">
-              <div className="test-icon">🎧</div>
+            <div className="landing-page-test-item">
+              <div className="landing-page-test-icon">🎧</div>
               <h3>Listening Test</h3>
               <p>Answer multiple-choice questions based on audio scenarios</p>
             </div>
-            <div className="test-item">
-              <div className="test-icon">📝</div>
+            <div className="landing-page-test-item">
+              <div className="landing-page-test-icon">📝</div>
               <h3>Written Test</h3>
               <p>Respond to written questions demonstrating your communication skills</p>
             </div>
-            <div className="test-item">
-              <div className="test-icon">🗣️</div>
+            <div className="landing-page-test-item">
+              <div className="landing-page-test-icon">🗣️</div>
               <h3>Speech Evaluation</h3>
               <p>Record verbal responses to interview questions (30-60 seconds each)</p>
             </div>
-            <div className="test-item">
-              <div className="test-icon">⌨️</div>
+            <div className="landing-page-test-item">
+              <div className="landing-page-test-icon">🧠</div>
+              <h3>Personality Assessment</h3>
+              <p>Multiple-choice questions to evaluate personality traits and work preferences</p>
+            </div>
+            <div className="landing-page-test-item">
+              <div className="landing-page-test-icon">⌨️</div>
               <h3>Typing Test</h3>
               <p>Complete a 60-second typing test to measure speed and accuracy</p>
             </div>
@@ -69,10 +74,11 @@ const LandingPage = () => {
             <li><strong>Listening Test:</strong> Multiple-choice questions based on customer service scenarios</li>
             <li><strong>Written Test:</strong> Professional written responses to job-related questions</li>
             <li><strong>Speech Evaluation:</strong> 5-6 interview questions with 30-60 second responses</li>
+            <li><strong>Personality Assessment:</strong> Psychological evaluation to assess work style and traits</li>
             <li><strong>Typing Test:</strong> 60-second speed and accuracy assessment</li>
-            <li><strong>Instant Feedback:</strong> Real-time scores and detailed evaluation for each component</li>
-            <li><strong>Progress Tracking:</strong> Visual progress indicator throughout the evaluation</li>
-            <li><strong>Flexible Timing:</strong> Complete at your own pace with the ability to pause and resume</li>
+            
+            
+            
           </ul>
         </section>
 
@@ -95,11 +101,11 @@ const LandingPage = () => {
         <div className="cta-section">
           {applicantInfo && sessionId ? (
             <div style={{ textAlign: 'center' }}>
-              <p style={{ marginBottom: '1rem', color: '#4a5568' }}>
+              <p style={{ marginBottom: '0', color: '#4a5568' }}>
                 Welcome back, <strong>{applicantInfo.firstName} {applicantInfo.lastName}</strong>! 
                 You have an evaluation in progress.
               </p>
-              <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap', marginTop: '0' }}>
                 <button className="start-btn" onClick={handleContinue}>
                   Continue Evaluation
                 </button>

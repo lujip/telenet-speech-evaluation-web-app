@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useSession } from '../../contexts/SessionContext.jsx';
 import ListenTest from '../listenTest/ListenTest.jsx';
 import EvaluationPage from '../evaluationpage/EvaluationPage.jsx';
+import PersonalityTest from '../personalityTest/PersonalityTest.jsx';
 import TypingTest from '../typingtest/TypingTest.jsx';
 import WrittenTest from '../writtenTest/WrittenTest.jsx';
 import './TestingPage.css';
@@ -14,11 +15,12 @@ const TestingPage = () => {
   const { applicantInfo, sessionId } = useSession();
   
   // Test pipeline states
-  const [currentTest, setCurrentTest] = useState('listening'); // 'listening', 'written', 'speech', 'typing'
+  const [currentTest, setCurrentTest] = useState('listening'); // 'listening', 'written', 'speech', 'personality', 'typing'
   const [testProgress, setTestProgress] = useState({
     listening: { completed: false, score: 0 },
     written: { completed: false, score: 0 },
     speech: { completed: false, score: 0 },
+    personality: { completed: false, score: 0 },
     typing: { completed: false, score: 0 }
   });
   
@@ -51,6 +53,7 @@ const TestingPage = () => {
             listening: { completed: completionStatus.listening, score: 0 },
             written: { completed: completionStatus.written, score: 0 },
             speech: { completed: completionStatus.speech, score: 0 },
+            personality: { completed: completionStatus.personality, score: 0 },
             typing: { completed: completionStatus.typing, score: 0 }
           });
           
@@ -60,9 +63,11 @@ const TestingPage = () => {
             nextTest = 'written';
           } else if (completionStatus.listening && completionStatus.written && !completionStatus.speech) {
             nextTest = 'speech';
-          } else if (completionStatus.listening && completionStatus.written && completionStatus.speech && !completionStatus.typing) {
+          } else if (completionStatus.listening && completionStatus.written && completionStatus.speech && !completionStatus.personality) {
+            nextTest = 'personality';
+          } else if (completionStatus.listening && completionStatus.written && completionStatus.speech && completionStatus.personality && !completionStatus.typing) {
             nextTest = 'typing';
-          } else if (completionStatus.listening && completionStatus.written && completionStatus.speech && completionStatus.typing) {
+          } else if (completionStatus.listening && completionStatus.written && completionStatus.speech && completionStatus.personality && completionStatus.typing) {
             // All tests completed, navigate to completion page
             navigate('/completion');
             return;
@@ -128,7 +133,7 @@ const TestingPage = () => {
 
   // Move to next test in pipeline
   const moveToNextTest = (completedTest) => {
-    const testOrder = ['listening', 'written', 'speech', 'typing'];
+    const testOrder = ['listening', 'written', 'speech', 'personality', 'typing'];
     const currentIndex = testOrder.indexOf(completedTest);
     const nextTest = testOrder[currentIndex + 1];
     
@@ -204,6 +209,13 @@ const TestingPage = () => {
             onNext={() => moveToNextTest('speech')}
           />
         );
+      case 'personality':
+        return (
+          <PersonalityTest 
+            onComplete={(results) => handleTestComplete('personality', results)}
+            onNext={() => moveToNextTest('personality')}
+          />
+        );
       case 'typing':
         return (
           <TypingTest 
@@ -230,6 +242,7 @@ const TestingPage = () => {
       case 'listening': return '🎧';
       case 'written': return '📝';
       case 'speech': return '🗣️';
+      case 'personality': return '🧠';
       case 'typing': return '⌨️';
       default: return '❓';
     }
@@ -241,6 +254,7 @@ const TestingPage = () => {
       case 'listening': return 'Listening Test';
       case 'written': return 'Written Test';
       case 'speech': return 'Speech Evaluation';
+      case 'personality': return 'Personality Assessment';
       case 'typing': return 'Typing Test';
       default: return 'Unknown Test';
     }
@@ -252,11 +266,11 @@ const TestingPage = () => {
     <div className="testing-page-container">
       {/* Progress Header */}
       <div className="testing-header">
-        <p>Complete all four tests to finish your evaluation</p>
+        <p>Complete all five tests to finish your evaluation</p>
         
         {/* Progress Bar */}
         <div className="progress-bar">
-          {['listening', 'written', 'speech', 'typing'].map((testType, index) => (
+          {['listening', 'written', 'speech', 'personality', 'typing'].map((testType, index) => (
             <div key={testType} className={`progress-step ${getTestStatus(testType)}`}>
               <div className="step-icon">
                 {getTestStatus(testType) === 'completed' ? '✅' : getTestIcon(testType)}
@@ -268,7 +282,7 @@ const TestingPage = () => {
                    getTestStatus(testType) === 'active' ? 'In Progress' : 'Pending'}
                 </span>
               </div>
-              {index < 3 && (
+              {index < 4 && (
                 <div className={`step-connector ${getTestStatus(testType) === 'completed' ? 'completed' : ''}`} />
               )}  
             </div>

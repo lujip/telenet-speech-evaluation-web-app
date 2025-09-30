@@ -141,6 +141,16 @@ const AdminDetailsModal = ({ applicant, onClose, getAuthHeaders, currentUser }) 
     return applicant.written_test || [];
   };
 
+  // Get personality test evaluations
+  const getPersonalityTestEvaluations = () => {
+    if (!applicant) return [];
+    return applicant.personality_test || [];
+  };
+
+  const getPersonalityTestEvaluationsCount = () => {
+    return getPersonalityTestEvaluations().length;
+  };
+
   const getCompletionStatus = (applicant) => {
     // New segmented format only
     const hasEvaluations = (
@@ -285,25 +295,31 @@ const AdminDetailsModal = ({ applicant, onClose, getAuthHeaders, currentUser }) 
               className={`tab-button ${activeTab === 'speech-evaluation' ? 'active' : ''}`}
               onClick={() => setActiveTab('speech-evaluation')}
             >
-              🎤 Speech Evaluation ({getSpeechEvaluationsCount()})
+              Speech Evaluation ({getSpeechEvaluationsCount()})
             </button>
             <button 
               className={`tab-button ${activeTab === 'listening-test' ? 'active' : ''}`}
               onClick={() => setActiveTab('listening-test')}
             >
-              📋 Listening Test ({getListeningTestEvaluationsCount()})
+              Listening Test ({getListeningTestEvaluationsCount()})
             </button>
             <button 
               className={`tab-button ${activeTab === 'written-test' ? 'active' : ''}`}
               onClick={() => setActiveTab('written-test')}
             >
-              ✍️ Written Test ({getWrittenTestEvaluations().length})
+              Written Test ({getWrittenTestEvaluations().length})
             </button>
             <button 
               className={`tab-button ${activeTab === 'typing-test' ? 'active' : ''}`}
               onClick={() => setActiveTab('typing-test')}
             >
-              ⌨️ Typing Test ({getTypingTestEvaluations().length})
+              Typing Test ({getTypingTestEvaluations().length})
+            </button>
+            <button 
+              className={`tab-button ${activeTab === 'personality-test' ? 'active' : ''}`}
+              onClick={() => setActiveTab('personality-test')}
+            >
+              Personality Test ({getPersonalityTestEvaluationsCount()})
             </button>
             <button 
               className={`tab-button ${activeTab === 'comments' ? 'active' : ''}`}
@@ -398,7 +414,7 @@ const AdminDetailsModal = ({ applicant, onClose, getAuthHeaders, currentUser }) 
                     <div key={`listening_${applicant.id}_${index}`} className="evaluation-item">
                       <div className="evaluation-header">
                         <h4>Listening Test #{index + 1}</h4>
-                        <span className="score-badge">Accuracy: {listeningEval.accuracy_percentage}%</span>
+                        <span className="score-badge">Accuracy: {(listeningEval.accuracy_percentage / 10).toFixed(1)}/10</span>
                       </div>
                       
                       <div className="evaluation-content">
@@ -580,6 +596,129 @@ const AdminDetailsModal = ({ applicant, onClose, getAuthHeaders, currentUser }) 
                     <p className="typing-note">
                       <small>
                         Note: Typing test results will appear here once the applicant completes the typing test.
+                      </small>
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {activeTab === 'personality-test' && (
+              <div className="evaluations-section">
+                <h3>Personality Test Results ({getPersonalityTestEvaluationsCount()})</h3>
+                {getPersonalityTestEvaluations().length > 0 ? (
+                  getPersonalityTestEvaluations().map((personalityEval, index) => (
+                    <div key={`personality_${applicant.id}_${index}`} className="evaluation-item">
+                      <div className="evaluation-header">
+                        <h4>Personality Test #{index + 1}</h4>
+                        <span className="score-badge">Questions: {personalityEval.total_questions || 0}</span>
+                      </div>
+                      
+                      <div className="evaluation-content">
+                        <div className="personality-test-summary">
+                          <h5>Test Summary:</h5>
+                          <div className="written-stats-grid">
+                            <div className="written-stat">
+                              <span className="stat-label">Total Questions:</span>
+                              <span className="stat-value">{personalityEval.total_questions || 0}</span>
+                            </div>
+                            <div className="written-stat">
+                              <span className="stat-label">Completion Time:</span>
+                              <span className="stat-value">{personalityEval.completion_time || 0}s</span>
+                            </div>
+                            <div className="written-stat">
+                              <span className="stat-label">Categories Passed:</span>
+                              <span className="stat-value">
+                                {personalityEval.category_analysis ? 
+                                  Object.values(personalityEval.category_analysis).filter(cat => cat.passed).length : 0
+                                }/5
+                              </span>
+                            </div>
+                            <div className="written-stat">
+                              <span className="stat-label">Overall Performance:</span>
+                              <span className="stat-value">
+                                {personalityEval.category_analysis ? 
+                                  Math.round(Object.values(personalityEval.category_analysis).reduce((sum, cat) => sum + (cat.percentage || 0), 0) / 5) : 0
+                                }%
+                              </span>
+                            </div>
+                          </div>
+                          
+                          <div className="category-scores-summary">
+                            <h6>Category Scores Overview:</h6>
+                            <div className="category-scores-list">
+                              {personalityEval.category_analysis ? (
+                                Object.entries(personalityEval.category_analysis).map(([category, data]) => (
+                                  <div key={category} className="category-score-item">
+                                    <span className="category-label">
+                                      {category.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}:
+                                    </span>
+                                    <span className={`category-score-value ${data.passed ? 'passed' : 'failed'}`}>
+                                      {data.score || 0}/10 ({data.percentage || 0}%)
+                                      {data.passed ? ' ✅' : ' ❌'}
+                                    </span>
+                                  </div>
+                                ))
+                              ) : personalityEval.trait_analysis ? (
+                                <div className="legacy-data-notice">
+                                  <p style={{color: '#6b7280', fontStyle: 'italic'}}>
+                                    Legacy personality data detected. Please retake the personality test with the updated format.
+                                  </p>
+                                </div>
+                              ) : (
+                                <div className="no-data-notice">
+                                  <p style={{color: '#6b7280', fontStyle: 'italic'}}>
+                                    No category analysis data available.
+                                  </p>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+
+
+
+
+                        {personalityEval.question_results && personalityEval.question_results.length > 0 && (
+                          <div className="question-breakdown">
+                            <h5>Question Responses:</h5>
+                            <div className="personality-questions-list">
+                              {personalityEval.question_results.map((result, qIndex) => (
+                                <div key={qIndex} className="personality-question-item">
+                                  <div className="personality-question-header">
+                                    <span className="question-number">Q{qIndex + 1}</span>
+                                    <span className="question-category">{result.category || 'General'}</span>
+                                  </div>
+                                  <div className="personality-question-content">
+                                    <p className="question-text">{result.question}</p>
+                                    <div className="answer-details">
+                                      <p><strong>Response:</strong> {result.selected_option || 'No response'}</p>
+                                      <p><strong>Correct Answer:</strong> {result.correct_answer || 'Unknown'}</p>
+                                      <p><strong>Result:</strong> 
+                                        <span className={`result-status ${result.is_correct ? 'correct' : 'incorrect'}`}>
+                                          {result.is_correct ? ' ✅ Correct' : ' ❌ Incorrect'}
+                                        </span>
+                                      </p>
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        <p className="timestamp">
+                          <small>Completed: {formatDate(personalityEval.timestamp)}</small>
+                        </p>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="no-personality-results">
+                    <p>No personality test results available for this applicant.</p>
+                    <p className="personality-note">
+                      <small>
+                        Note: Personality test results will appear here once the applicant completes the personality assessment.
                       </small>
                     </p>
                   </div>

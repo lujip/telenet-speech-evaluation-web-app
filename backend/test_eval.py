@@ -90,12 +90,61 @@ def judge_answer_2(question, answer, scores=None):
     response = client.chat.completions.create(
         model="gpt-3.5-turbo",
         messages=[{"role": "user", "content": prompt}],
-        temperature=0.3
+        temperature=0.3 
     )
 
     return response.choices[0].message.content.strip()
 
+# ------------------ API INTEGRATION (Call Center Prompt, English Skills Only) ------------------ #
+def judge_answer_english_only(question, answer, scores=None):
+    if not answer.strip():
+        return """{
+    \"score\": 0,
+    \"category_scores\": {
+      \"relevance\": 0,
+      \"grammar_lexis\": 0,
+      \"communication_skills\": 0,
+      \"fluency_pronunciation\": 0
+    },
+    \"comment\": \"The transcript was empty or unintelligible. Please ensure the response is clearly audible.\"
+}"""
 
+    scores_text = ""
+    if scores:
+        scores_text = "\nSystem Scores (for reference):\n" + "\n".join(f"- {k.replace('_',' ').title()}: {v}" for k, v in scores.items()) + "\n"
+
+    prompt = (
+        f"You are a strict evaluator of English communication skills. You're assessing an applicant's spoken response to a casual question (not for a BPO or customer service role).\n\n"
+        f"Question: {question}\n"
+        f"Candidate's Answer: {answer}\n"
+        f"{scores_text}\n"
+        "Rate the answer using the following 4 criteria. Score 1 to 10, but most poor answers should fall in the 1–4 range:\n"
+        "1. Relevance – Does the answer directly and clearly address the question? Off-topic or vague answers should score 3 or lower.\n"
+        "2. Grammar and Lexis – Is grammar correct and vocabulary appropriate for clear communication? Frequent grammar mistakes = score ≤ 3.\n"
+        "3. Communication Skills – Does the speaker express ideas clearly, logically, and confidently? Is the message well-structured? = score ≤ 4.\n"
+        "4. Fluency and Pronunciation –  Is the speech smooth and easy to follow? Penalize heavy use of filler words (e.g., 'um', 'uhm', 'ah', 'you know') and unnatural pauses.\n\n"
+        #"Be very strict. Do not be generous. If the response is disorganized, poorly spoken, or contains fillers, score low. Use 1s and 2s if necessary.\n\n"
+        "Be fair and objective in your evaluation. Use the full range of scores as appropriate for the quality of the answer.\n\n"   
+        "Return a JSON object strictly in this format:\n"
+        "{\n"
+        "  \"score\": (1–10 overall),\n"
+        "  \"category_scores\": {\n"
+        "    \"relevance\": x,\n"
+        "    \"grammar_lexis\": x,\n"
+        "    \"communication_skills\": x,\n"
+        "    \"fluency_pronunciation\": x\n"
+        "  },\n"
+        "  \"comment\": \"Give actionable, constructive feedback. Mention filler words, disorganization, bad tone, grammar errors, or anything weak about the English communication.\"\n"
+        "}"
+    )
+
+    response = client.chat.completions.create(
+        model="gpt-3.5-turbo",
+        messages=[{"role": "user", "content": prompt}],
+        temperature=0.5 
+    )
+
+    return response.choices[0].message.content.strip()
 
 
 # ------------------ 1. Speak the Question (OBSOLETE)------------------ #  
@@ -251,7 +300,7 @@ def run_full_evaluation(question, keywords, audio_file, use_deepgram=True):
   #  audio_metrics = analyze_audio(audio_file)
     # Let GPT handle all scoring and feedback
     try:
-        gpt_judgment = judge_answer_2(question, transcript, {})
+        gpt_judgment = judge_answer_english_only(question, transcript, {})
         import json as _json
         gpt_result = _json.loads(gpt_judgment) if gpt_judgment.strip().startswith('{') else {}
     except Exception as e:

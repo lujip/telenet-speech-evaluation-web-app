@@ -19,7 +19,7 @@ const CompletionPage = () => {
     <div className="main-content-vertical">
       <div className="box-container">
         <h1 className="completion-title">🎉 Evaluation Complete!</h1>
-        <p className="completion-subtitle">Congratulations! You have successfully completed all three parts of the evaluation.</p>
+        <p className="completion-subtitle">Congratulations! You have successfully completed all five parts of the evaluation.</p>
 
         <div className="lobby-instruction">
           <h2 className="lobby-instruction-title">📍 Next Steps</h2>
@@ -31,32 +31,40 @@ const CompletionPage = () => {
         <div className="completion-summary">
           <h2>What You Completed:</h2>
           <div className="test-summary">
-            <div className="test-item completed">
-              <span className="test-icon">🎧</span>
+            <div className="completion-page-test-item completed">
+              <span className="completion-page-test-icon">🎧</span>
               <div className="test-info">
                 <h3>Listening Test</h3>
                 <p>Repeated phrases accurately</p>
               </div>
             </div>
             
-            <div className="test-item completed">
-              <span className="test-icon">🗣️</span>
+            <div className="completion-page-test-item completed">
+              <span className="completion-page-test-icon">🗣️</span>
               <div className="test-info">
                 <h3>Speech Evaluation</h3>
                 <p>Answered interview questions</p>
               </div>
             </div>
             
-            <div className="test-item completed">
-              <span className="test-icon">⌨️</span>
+            <div className="completion-page-test-item completed">
+              <span className="completion-page-test-icon">🧠</span>
+              <div className="test-info">
+                <h3>Personality Assessment</h3>
+                <p>Completed personality evaluation</p>
+              </div>
+            </div>
+            
+            <div className="completion-page-test-item completed">
+              <span className="completion-page-test-icon">⌨️</span>
               <div className="test-info">
                 <h3>Typing Test</h3>
                 <p>Demonstrated typing skills</p>
               </div>
             </div>
 
-            <div className="test-item completed">
-              <span className="test-icon">📝</span>
+            <div className="completion-page-test-item completed">
+              <span className="completion-page-test-icon">📝</span>
               <div className="test-info">
                 <h3>Written Test</h3>
                 <p>Completed knowledge assessment</p>

@@ -1,0 +1,282 @@
+[
+  {
+    "id": 1,
+    "type": "multiple_choice",
+    "question": "When working on a team project, I prefer to:",
+    "options": [
+      "Take charge and lead the team",
+      "Contribute my ideas when asked",
+      "Support others and help them succeed",
+      "Work independently on my assigned tasks"
+    ],
+    "category": "leadership",
+    "trait": "leadership_style",
+    "active": true
+  },
+  {
+    "id": 2,
+    "type": "multiple_choice",
+    "question": "When facing a challenging problem at work, I typically:",
+    "options": [
+      "Break it down into smaller, manageable parts",
+      "Seek input from colleagues or supervisors",
+      "Try different approaches until something works",
+      "Research similar problems and their solutions"
+    ],
+    "category": "problem_solving",
+    "trait": "problem_solving_approach",
+    "active": true
+  },
+  {
+    "id": 3,
+    "type": "multiple_choice",
+    "question": "In a stressful work situation, I:",
+    "options": [
+      "Stay calm and focus on solutions",
+      "Take breaks to manage my stress levels",
+      "Talk through the situation with others",
+      "Work harder to get through it quickly"
+    ],
+    "category": "stress_management",
+    "trait": "stress_response",
+    "active": true
+  },
+  {
+    "id": 4,
+    "type": "multiple_choice",
+    "question": "When receiving feedback on my work, I:",
+    "options": [
+      "Welcome it as an opportunity to improve",
+      "Listen carefully and ask clarifying questions",
+      "Sometimes feel defensive but try to learn",
+      "Prefer written feedback over verbal"
+    ],
+    "category": "communication",
+    "trait": "feedback_reception",
+    "active": true
+  },
+  {
+    "id": 5,
+    "type": "multiple_choice",
+    "question": "My ideal work environment is:",
+    "options": [
+      "Fast-paced with lots of variety",
+      "Structured with clear expectations",
+      "Collaborative with team interaction",
+      "Quiet with minimal interruptions"
+    ],
+    "category": "work_environment",
+    "trait": "environment_preference",
+    "active": true
+  },
+  {
+    "id": 6,
+    "type": "multiple_choice",
+    "question": "When making important decisions, I:",
+    "options": [
+      "Analyze all available data thoroughly",
+      "Trust my instincts and experience",
+      "Consult with others for their opinions",
+      "Consider the impact on all stakeholders"
+    ],
+    "category": "decision_making",
+    "trait": "decision_style",
+    "active": true
+  },
+  {
+    "id": 7,
+    "type": "multiple_choice",
+    "question": "I am most motivated by:",
+    "options": [
+      "Achieving challenging goals",
+      "Recognition for my contributions",
+      "Helping others succeed",
+      "Learning new skills and knowledge"
+    ],
+    "category": "motivation",
+    "trait": "motivational_drivers",
+    "active": true
+  },
+  {
+    "id": 8,
+    "type": "multiple_choice",
+    "question": "When working with difficult customers or clients, I:",
+    "options": [
+      "Stay patient and professional",
+      "Try to understand their perspective",
+      "Focus on finding solutions quickly",
+      "Escalate to a supervisor when needed"
+    ],
+    "category": "customer_service",
+    "trait": "conflict_resolution",
+    "active": true
+  },
+  {
+    "id": 9,
+    "type": "multiple_choice",
+    "question": "I prefer to communicate important information:",
+    "options": [
+      "Face-to-face or via video call",
+      "Through email with detailed explanations",
+      "In group meetings with everyone present",
+      "Through brief, direct messages"
+    ],
+    "category": "communication",
+    "trait": "communication_style",
+    "active": true
+  },
+  {
+    "id": 10,
+    "type": "multiple_choice",
+    "question": "When learning new software or systems, I:",
+    "options": [
+      "Dive in and learn through trial and error",
+      "Read documentation and tutorials first",
+      "Ask colleagues to show me the ropes",
+      "Take formal training courses"
+    ],
+    "category": "learning",
+    "trait": "learning_style",
+    "active": true
+  },
+  {
+    "id": 11,
+    "type": "multiple_choice",
+    "question": "I work best when:",
+    "options": [
+      "I have a clear deadline to meet",
+      "I can set my own pace and schedule",
+      "I'm working with others on shared goals",
+      "I have minimal supervision"
+    ],
+    "category": "work_style",
+    "trait": "work_preference",
+    "active": true
+  },
+  {
+    "id": 12,
+    "type": "multiple_choice",
+    "question": "When I disagree with a colleague's approach, I:",
+    "options": [
+      "Express my concerns diplomatically",
+      "Suggest we discuss alternative options",
+      "Go along with their approach to avoid conflict",
+      "Present data to support my position"
+    ],
+    "category": "conflict_resolution",
+    "trait": "disagreement_handling",
+    "active": true
+  },
+  {
+    "id": 13,
+    "type": "multiple_choice",
+    "question": "I am most comfortable with change when:",
+    "options": [
+      "I understand the reasons behind it",
+      "I'm involved in planning the transition",
+      "The change is implemented gradually",
+      "I can see the benefits clearly"
+    ],
+    "category": "adaptability",
+    "trait": "change_management",
+    "active": true
+  },
+  {
+    "id": 14,
+    "type": "multiple_choice",
+    "question": "When prioritizing my workload, I:",
+    "options": [
+      "Focus on urgent tasks first",
+      "Start with the most challenging work",
+      "Balance urgent and important tasks",
+      "Complete easier tasks to build momentum"
+    ],
+    "category": "time_management",
+    "trait": "prioritization_style",
+    "active": true
+  },
+  {
+    "id": 15,
+    "type": "multiple_choice",
+    "question": "I feel most successful when:",
+    "options": [
+      "I exceed performance targets",
+      "I help my team achieve their goals",
+      "I master new skills or knowledge",
+      "I receive positive feedback from others"
+    ],
+    "category": "success_metrics",
+    "trait": "success_definition",
+    "active": true
+  },
+  {
+    "id": 16,
+    "type": "multiple_choice",
+    "question": "When attending meetings, I typically:",
+    "options": [
+      "Come prepared with questions and ideas",
+      "Listen carefully and contribute when relevant",
+      "Focus on action items and next steps",
+      "Take detailed notes for follow-up"
+    ],
+    "category": "meeting_participation",
+    "trait": "meeting_style",
+    "active": true
+  },
+  {
+    "id": 17,
+    "type": "multiple_choice",
+    "question": "I handle interruptions at work by:",
+    "options": [
+      "Addressing them immediately to stay responsive",
+      "Politely asking to finish my current task first",
+      "Setting specific times for availability",
+      "Determining urgency before responding"
+    ],
+    "category": "time_management",
+    "trait": "interruption_handling",
+    "active": true
+  },
+  {
+    "id": 18,
+    "type": "multiple_choice",
+    "question": "When working on long-term projects, I:",
+    "options": [
+      "Break them into smaller milestones",
+      "Focus on steady, consistent progress",
+      "Work in intense bursts when motivated",
+      "Regularly review and adjust my approach"
+    ],
+    "category": "project_management",
+    "trait": "project_approach",
+    "active": true
+  },
+  {
+    "id": 19,
+    "type": "multiple_choice",
+    "question": "I prefer to receive work assignments that are:",
+    "options": [
+      "Clearly defined with specific outcomes",
+      "Challenging but achievable",
+      "Varied and interesting",
+      "Aligned with my strengths"
+    ],
+    "category": "work_preference",
+    "trait": "assignment_preference",
+    "active": true
+  },
+  {
+    "id": 20,
+    "type": "multiple_choice",
+    "question": "When I make a mistake at work, I:",
+    "options": [
+      "Immediately inform my supervisor",
+      "Fix it quickly and learn from it",
+      "Analyze what went wrong to prevent recurrence",
+      "Discuss it with colleagues for their input"
+    ],
+    "category": "accountability",
+    "trait": "mistake_handling",
+    "active": true
+  }
+] 
