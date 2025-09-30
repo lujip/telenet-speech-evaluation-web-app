@@ -520,18 +520,22 @@ const Admin = () => {
         >
           Applicants
         </button>
-        <button 
-          className={`tab-button ${activeTab === 'questions' ? 'active' : ''}`}
-          onClick={() => setActiveTab('questions')}
-        >
-          Speech Evaluation Questions
-        </button>
-        <button 
-          className={`tab-button ${activeTab === 'listening-questions' ? 'active' : ''}`}
-          onClick={() => setActiveTab('listening-questions')}
-        >
-          Listening Test Questions
-        </button>
+        {currentUser?.role === 'super_admin' && (
+          <>
+            <button 
+              className={`tab-button ${activeTab === 'questions' ? 'active' : ''}`}
+              onClick={() => setActiveTab('questions')}
+            >
+              Speech Evaluation Questions
+            </button>
+            <button 
+              className={`tab-button ${activeTab === 'listening-questions' ? 'active' : ''}`}
+              onClick={() => setActiveTab('listening-questions')}
+            >
+              Listening Test Questions
+            </button>
+          </>
+        )}
                   {hasPermission('view_users') && (
             <button 
               className={`tab-button ${activeTab === 'users' ? 'active' : ''}`}
