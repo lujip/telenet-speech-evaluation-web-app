@@ -345,7 +345,21 @@ const Admin = () => {
   };
 
   const getStorageTypeLabel = (applicant) => {
-    return applicant.status === 'temporary' ? '🟡 Temporary' : '🟢 Permanent';
+    // Check applicant_status first (new, pending, approved, rejected)
+    const applicantStatus = applicant.applicant_info?.applicant_status || applicant.applicant_status;
+    
+    if (applicantStatus === 'new') {
+      return '🔵 New';
+    } else if (applicantStatus === 'pending') {
+      return '🟡 Pending';
+    } else if (applicantStatus === 'approved') {
+      return '🟢 Approved';
+    } else if (applicantStatus === 'rejected') {
+      return '🔴 Rejected';
+    }
+    
+    // Fallback to storage type (temporary/permanent)
+    return applicant.status === 'temporary' ? '🟠 (OLD FORMAT)' : '🟠 (OLD FORMAT)';
   };
 
   const getStatusColor = (status) => {

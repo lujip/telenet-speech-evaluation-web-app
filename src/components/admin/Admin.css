@@ -1142,13 +1142,15 @@
 }
 
 .storage-type-badge {
-  font-size: 11px;
-  padding: 2px 8px;
+  font-size: 12px !important;
+  font-weight: bold;
+  padding: 2px 8px !important;
   border-radius: 12px;
   background-color: #f3f4f6;
-  color: #374151;
+  color: #2F6798;
   border: 1px solid #d1d5db;
   white-space: nowrap;
+  max-width: 120px;
 }
 
 .storage-type-badge.list-storage {

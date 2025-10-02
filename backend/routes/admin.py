@@ -596,4 +596,78 @@ def delete_applicant_comment(applicant_id, comment_id):
         
     except Exception as e:
         print(f"Error deleting comment {comment_id} for applicant {applicant_id}: {str(e)}")
-        return jsonify({"success": False, "message": f"Error deleting comment: {str(e)}"}), 500 
+        return jsonify({"success": False, "message": f"Error deleting comment: {str(e)}"}), 500
+
+@admin_bp.route("/admin/applicants/<applicant_id>/status", methods=["PUT"])
+@require_permission("edit_applicants")
+def update_applicant_status(applicant_id):
+    """Update the status of an applicant (new, pending, approved, rejected)"""
+    try:
+        data = request.get_json()
+        new_status = data.get("status")
+        
+        if not new_status:
+            return jsonify({"success": False, "message": "Status is required"}), 400
+        
+        # Validate status value
+        valid_statuses = ['new', 'pending', 'approved', 'rejected', 'temporary', 'permanent']
+        if new_status not in valid_statuses:
+            return jsonify({"success": False, "message": f"Invalid status. Must be one of: {', '.join(valid_statuses)}"}), 400
+        
+        # Find applicant in either permanent or temporary storage
+        applicant, storage_type, applicants_data = find_applicant_data(applicant_id)
+        
+        if not applicant:
+            return jsonify({"success": False, "message": "Applicant not found"}), 404
+        
+        if storage_type == "permanent":
+            # Handle permanent applicant
+            applicant_index = None
+            for i, app in enumerate(applicants_data.get("applicants", [])):
+                if app.get("id") == applicant_id:
+                    applicant_index = i
+                    break
+            
+            if applicant_index is None:
+                return jsonify({"success": False, "message": "Applicant not found in permanent storage"}), 404
+            
+            # Update the applicant_status in applicant_info
+            if "applicant_info" not in applicants_data["applicants"][applicant_index]:
+                applicants_data["applicants"][applicant_index]["applicant_info"] = {}
+            
+            applicants_data["applicants"][applicant_index]["applicant_info"]["applicant_status"] = new_status
+            
+            # Also update last_updated timestamp
+            from datetime import datetime
+            applicants_data["applicants"][applicant_index]["last_updated"] = datetime.now().isoformat()
+            
+            # Save updated applicants data
+            if not save_applicants(applicants_data):
+                return jsonify({"success": False, "message": "Failed to save applicant status"}), 500
+            
+        else:  # storage_type == "temporary"
+            # For temporary applicants, we need to update the temp file
+            temp_applicant = load_temp_applicant(applicant_id)
+            if not temp_applicant:
+                return jsonify({"success": False, "message": "Temporary applicant not found"}), 404
+            
+            # Update the applicant_status in applicant data
+            if "applicant" not in temp_applicant:
+                temp_applicant["applicant"] = {}
+            
+            temp_applicant["applicant"]["applicant_status"] = new_status
+            
+            # Save updated temp applicant
+            from utils.file_ops import save_temp_applicant
+            if not save_temp_applicant(temp_applicant, applicant_id):
+                return jsonify({"success": False, "message": "Failed to save temporary applicant status"}), 500
+        
+        return jsonify({
+            "success": True, 
+            "message": "Status updated successfully",
+            "status": new_status
+        })
+        
+    except Exception as e:
+        print(f"Error updating status for applicant {applicant_id}: {str(e)}")
+        return jsonify({"success": False, "message": f"Error updating status: {str(e)}"}), 500 

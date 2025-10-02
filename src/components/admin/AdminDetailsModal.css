@@ -1171,9 +1171,45 @@
   padding: 4px 8px;
   border-radius: 12px;
   background-color: #f3f4f6;
-  color: #374151;
+  color: #2F6798;
   border: 1px solid #d1d5db;
   white-space: nowrap;
+}
+
+.modal-header .status-dropdown {
+  font-size: 15px;
+  padding: 8px 4px;
+  border-radius: 8px;
+  background-color: white;
+  color: #2F6798;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  cursor: pointer;
+  font-weight: bold;
+  transition: all 0.3s ease;
+  outline: none;
+  min-width: 150px;
+  max-width: 150px;
+}
+
+.modal-header .status-dropdown:hover {
+  background-color: rgba(255, 255, 255, 0.95);
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+.modal-header .status-dropdown:focus {
+  border-color: white;
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.2);
+}
+
+.modal-header .status-dropdown:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.modal-header .status-dropdown option {
+  background-color: white;
+  color: #374151;
+  padding: 8px;
 }
 
 /* Personality Test Specific Styles */

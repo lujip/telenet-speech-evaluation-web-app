@@ -161,7 +161,10 @@ const ApplicantForm = () => {
       const applicantData = {
         sessionId: sessionId,
         timestamp: new Date().toISOString(),
-        applicant: formData
+        applicant: {
+          ...formData,
+          applicant_status: 'new'  // Hidden status field for newly created applicants
+        }
       };
       
       try {

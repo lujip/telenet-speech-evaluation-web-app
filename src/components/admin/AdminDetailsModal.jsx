@@ -13,6 +13,10 @@ const AdminDetailsModal = ({ applicant, onClose, getAuthHeaders, currentUser }) 
   const [newComment, setNewComment] = useState('');
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
   const [commentsError, setCommentsError] = useState('');
+  
+  // Status state
+  const [applicantStatus, setApplicantStatus] = useState('');
+  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
 
   // Load comments when modal opens or applicant changes
   useEffect(() => {
@@ -20,6 +24,14 @@ const AdminDetailsModal = ({ applicant, onClose, getAuthHeaders, currentUser }) 
       loadComments();
     }
   }, [applicant?.id]);
+
+  // Initialize applicant status
+  useEffect(() => {
+    if (applicant) {
+      const currentStatus = applicant.applicant_info?.applicant_status || applicant.applicant_status || 'permanent';
+      setApplicantStatus(currentStatus);
+    }
+  }, [applicant]);
 
   const loadComments = async () => {
     try {
@@ -104,6 +116,36 @@ const AdminDetailsModal = ({ applicant, onClose, getAuthHeaders, currentUser }) 
     }
   };
 
+  const handleStatusChange = async (newStatus) => {
+    setIsUpdatingStatus(true);
+    try {
+      const response = await axios.put(`${API_URL}/admin/applicants/${applicant.id}/status`, {
+        status: newStatus
+      }, {
+        headers: getAuthHeaders()
+      });
+      
+      if (response.data.success) {
+        setApplicantStatus(newStatus);
+        // Optionally notify parent component to refresh data
+        alert('Status updated successfully!');
+      } else {
+        alert('Failed to update status: ' + response.data.message);
+      }
+    } catch (error) {
+      console.error('Error updating status:', error);
+      if (error.response && error.response.status === 401) {
+        alert('Authentication required. Please log in again.');
+      } else if (error.response && error.response.status === 403) {
+        alert('You do not have permission to update applicant status.');
+      } else {
+        alert('Failed to update status');
+      }
+    } finally {
+      setIsUpdatingStatus(false);
+    }
+  };
+
   const formatDate = (dateString) => {
     if (!dateString) return 'N/A';
     return new Date(dateString).toLocaleString();
@@ -165,7 +207,6 @@ const AdminDetailsModal = ({ applicant, onClose, getAuthHeaders, currentUser }) 
     return 'In Progress';
   };
 
-
   if (!applicant) return null;
 
   return (
@@ -174,9 +215,17 @@ const AdminDetailsModal = ({ applicant, onClose, getAuthHeaders, currentUser }) 
         <div className="modal-header">
           <h2>{applicant.applicant_info?.lastName}, {applicant.applicant_info?.firstName} - Detailed Evaluation</h2>
           <div className="modal-header-badges">
-            <span className="storage-type-badge">
-              {applicant.status === 'temporary' ? '🟡 Temporary' : '🟢 Permanent'}
-            </span>
+            <select 
+              className="status-dropdown"
+              value={applicantStatus}
+              onChange={(e) => handleStatusChange(e.target.value)}
+              disabled={isUpdatingStatus}
+            >
+              <option value="new">🔵 New</option>
+              <option value="pending">🟡 Pending</option>
+              <option value="approved">🟢 Approved</option>
+              <option value="rejected">🔴 Rejected</option>
+            </select>
           </div>
           <button 
             onClick={onClose}
