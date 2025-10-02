@@ -401,8 +401,10 @@ const Admin = () => {
       }
     }
     
-    // Calculate merged score: (Listening + Speech) / 2
-    const mergedScore = (parseFloat(speechScore) + parseFloat(listeningScore)) / 2;
+    // Calculate merged score: (Speech + Listening) / 2
+    // Note: listeningScore is in percentage (0-100), so divide by 10 to get 0-10 scale
+    const listeningScoreNormalized = parseFloat(listeningScore) / 10;
+    const mergedScore = (parseFloat(speechScore) + listeningScoreNormalized) / 2;
     const passFail = mergedScore >= 7.0 ? 'PASS' : 'FAIL';
     
     return {
