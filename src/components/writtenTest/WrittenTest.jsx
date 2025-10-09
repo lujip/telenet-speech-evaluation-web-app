@@ -12,6 +12,7 @@ const WrittenTest = ({ onComplete, onNext }) => {
       title="Written Test"
       icon="📝"
       instructions={[
+        "This test contains 20 randomly selected questions",
         "Answer all questions to the best of your ability",
         "Some questions are multiple choice, others require typed answers",
         "Read each question carefully before answering",
@@ -21,7 +22,7 @@ const WrittenTest = ({ onComplete, onNext }) => {
       timerMinutes={10}
       fetchQuestionsUrl={`${API_URL}/written/questions`}
       submitAnswersUrl={`${API_URL}/written/submit`}
-      maxQuestions={null} // Show all questions
+      maxQuestions={null} // Show all questions (already randomized to 20 by backend)
       showQuestionNavigation={true}
       showTimer={true}
       onComplete={onComplete}

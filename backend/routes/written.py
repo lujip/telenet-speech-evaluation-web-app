@@ -6,21 +6,29 @@ from config import WRITTEN_TEST_QUESTIONS_FILE
 from utils.file_ops import (
     save_temp_evaluation, load_temp_evaluation, load_written_test_questions, save_written_test_questions
 )
+from utils.session import get_active_written_test_questions_for_session
 
 written_bp = Blueprint('written', __name__)
 
 @written_bp.route("/written/questions", methods=["GET"])
 def get_written_test_questions():
-    """Get a random set of written test questions from MongoDB"""
+    """Get a random set of written test questions for the session (20 out of 47)"""
     try:
-        # Load all questions from MongoDB
-        all_questions = load_written_test_questions()
-        # Select 5 random questions for the test (if you want random selection)
-        # import random
-        # selected_questions = random.sample(all_questions, min(5, len(all_questions)))
+        # Get session ID from query parameters
+        session_id = request.args.get("session_id")
+        
+        if not session_id:
+            return jsonify({
+                "success": False,
+                "message": "Session ID is required"
+            }), 400
+        
+        # Get session-specific questions (randomized 20 out of 47, cached per session)
+        session_questions = get_active_written_test_questions_for_session(session_id)
+        
         # Remove correct answers from response (only send to frontend for display)
         questions_for_frontend = []
-        for question in all_questions:
+        for question in session_questions:
             question_copy = {
                 "id": question["id"],
                 "type": question.get("type", "multiple_choice"),
@@ -34,6 +42,9 @@ def get_written_test_questions():
             else:
                 question_copy["options"] = question["options"]
             questions_for_frontend.append(question_copy)
+        
+        print(f"DEBUG: Session {session_id} - Loaded {len(questions_for_frontend)} written test questions")
+        
         return jsonify({
             "success": True,
             "questions": questions_for_frontend
@@ -61,11 +72,11 @@ def submit_written_test():
                 "message": "Answers are required"
             }), 400
         
-        # Load all questions to check correct answers
-        all_questions = load_written_test_questions()
+        # Get the session-specific questions (the same ones the user saw)
+        session_questions = get_active_written_test_questions_for_session(session_id)
         
         # Create a lookup for questions by ID
-        questions_lookup = {q["id"]: q for q in all_questions}
+        questions_lookup = {q["id"]: q for q in session_questions}
         
         # Calculate score
         total_questions = len(answers)

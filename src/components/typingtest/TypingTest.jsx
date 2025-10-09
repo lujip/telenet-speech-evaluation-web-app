@@ -113,6 +113,42 @@ const TypingTest = ({ onComplete, onNext, sessionId }) => {
     }
   }
 
+  // Render text with highlighting for current typing progress
+  const renderHighlightedText = () => {
+    if (!testData) return null
+    
+    const originalText = testData.text
+    const typedLength = typedText.length
+    
+    // Get current character and remaining text
+    const current = originalText[typedLength] || ''
+    const remaining = originalText.slice(typedLength + 1)
+    
+    // Compare typed text with original for correctness
+    const typedChars = typedText.split('')
+    const originalChars = originalText.split('')
+    
+    return (
+      <p>
+        {typedChars.map((char, index) => {
+          const isCorrect = char === originalChars[index]
+          return (
+            <span
+              key={index}
+              className={isCorrect ? 'char-correct' : 'char-incorrect'}
+            >
+              {originalChars[index]}
+            </span>
+          )
+        })}
+        {current && (
+          <span className="char-current">{current}</span>
+        )}
+        <span className="char-remaining">{remaining}</span>
+      </p>
+    )
+  }
+
   // Handle test completion
   const handleTestComplete = () => {
     // Prevent multiple completion calls
@@ -245,7 +281,7 @@ const TypingTest = ({ onComplete, onNext, sessionId }) => {
         <div className="test-active">
           <div className="timer">Time Remaining: {formatTime(timeLeft)}</div>
           <div className="text-display">
-            <p>{testData.text}</p>
+            {renderHighlightedText()}
           </div>
           <div className="input-section">
             <textarea
@@ -277,7 +313,7 @@ const TypingTest = ({ onComplete, onNext, sessionId }) => {
         </div>
       )}
 
-      {isComplete && (
+      {/*isComplete && (
         <div className="test-results">
           <h3>Test Complete!</h3>
           <div className="results-grid">
@@ -299,7 +335,7 @@ const TypingTest = ({ onComplete, onNext, sessionId }) => {
             </div>
           </div>
         </div>
-      )}
+      )*/}
     </div>
   )
 }

@@ -13,6 +13,7 @@ const ApplicantForm = () => {
 
   const [formData, setFormData] = useState({
     positionApplied: '',
+    positionType: '',
     
     // Personal Information
     lastName: '',
@@ -118,6 +119,10 @@ const ApplicantForm = () => {
       newErrors.positionApplied = 'Position applied is required';
     }
     
+    if (!formData.positionType) {
+      newErrors.positionType = 'Position type is required';
+    }
+    
     if (!formData.lastName.trim()) {
       newErrors.lastName = 'Last name is required';
     }
@@ -187,6 +192,7 @@ const ApplicantForm = () => {
   const resetForm = () => {
     setFormData({
       positionApplied: '',
+      positionType: '',
       lastName: '',
       firstName: '',
       dateOfBirth: '',
@@ -231,6 +237,7 @@ const ApplicantForm = () => {
   // Check if form is complete (all required fields filled)
   const isFormComplete = () => {
     return formData.positionApplied.trim() && 
+           formData.positionType &&
            formData.lastName.trim() && 
            formData.firstName.trim() && 
            formData.email.trim() && 
@@ -253,6 +260,7 @@ const ApplicantForm = () => {
               <p><strong>Name:</strong> {formData.lastName}, {formData.firstName}</p>
               <p><strong>Email:</strong> {formData.email}</p>
               <p><strong>Position Applied:</strong> {formData.positionApplied}</p>
+              <p><strong>Position Type:</strong> {formData.positionType}</p>
               {formData.cellphoneNumber && <p><strong>Phone:</strong> {formData.cellphoneNumber}</p>}
             </div>
             <div className="action-buttons">
@@ -296,6 +304,22 @@ const ApplicantForm = () => {
                   placeholder="Enter position you're applying for"
                 />
                 {errors.positionApplied && <span className="error-message">{errors.positionApplied}</span>}
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="positionType">Position Type *</label>
+                <select
+                  id="positionType"
+                  name="positionType"
+                  value={formData.positionType}
+                  onChange={handleInputChange}
+                  className={errors.positionType ? 'error' : ''}
+                >
+                  <option value="">Select position type</option>
+                  <option value="voice">Voice</option>
+                  <option value="non-voice">Non-Voice</option>
+                </select>
+                {errors.positionType && <span className="error-message">{errors.positionType}</span>}
               </div>
             </div>
 

@@ -718,7 +718,7 @@ const Admin = () => {
                       
                       <div className="list-item-content position">
                         <div className="applicant-position">{applicant.applicant_info?.positionApplied || 'N/A'}</div>
-                        
+                        <div className="applicant-type">{applicant.applicant_info?.positionType || 'N/A'}</div>
                       </div>
                       
                       <div className="list-item-content status">

@@ -7,6 +7,9 @@ const EvaluationPage = ({ onComplete, onNext }) => {
   console.log("EvaluationPage component mounted");
   const { applicantInfo, sessionId } = useSession();
   
+  // Check if position type is non-voice and skip speech evaluation
+  const [shouldSkipSpeech, setShouldSkipSpeech] = useState(false);
+  
   const [question, setQuestion] = useState('');
   const [questionKeywords, setQuestionKeywords] = useState([]);
   const [currentAudioId, setCurrentAudioId] = useState('');
@@ -40,16 +43,27 @@ const EvaluationPage = ({ onComplete, onNext }) => {
   const [hasSpokenInitialQuestion, setHasSpokenInitialQuestion] = useState(false);
   const API_URL = import.meta.env.VITE_API_URL;
 
+  // Check position type and skip speech evaluation if non-voice
+  useEffect(() => {
+    if (applicantInfo && applicantInfo.positionType) {
+      const positionType = applicantInfo.positionType.toLowerCase();
+      if (positionType === 'non-voice' || positionType === 'non voice' || positionType === 'nonvoice') {
+        setShouldSkipSpeech(true);
+        console.log("Non-voice position detected, speech evaluation will be skipped");
+      }
+    }
+  }, [applicantInfo]);
+
   // Reset evaluation state when component mounts (new session)
   useEffect(() => {
-    if (applicantInfo && sessionId && !hasSpokenInitialQuestion) {
+    if (applicantInfo && sessionId && !hasSpokenInitialQuestion && !shouldSkipSpeech) {
       // Check current session state from backend
       checkSessionState();
       setHasSpokenInitialQuestion(true);
       // Start session timer
       setIsSessionStarted(true);
     }
-  }, [applicantInfo, sessionId]);
+  }, [applicantInfo, sessionId, shouldSkipSpeech]);
 
   // Session timer countdown effect
   useEffect(() => {
@@ -449,6 +463,77 @@ const EvaluationPage = ({ onComplete, onNext }) => {
       </div>
     );
   };
+
+  // Render skip speech evaluation UI for non-voice positions
+  if (shouldSkipSpeech) {
+    return (
+      <div className="main-content-vertical">
+        <div className="box-container" style={{ textAlign: 'center', padding: '40px' }}>
+          
+          <div className="skip-speech-notice" style={{
+            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            color: 'white',
+            padding: '40px',
+            borderRadius: '12px',
+            margin: '20px 0',
+            boxShadow: '0 4px 15px rgba(0, 0, 0, 0.2)'
+          }}>
+            <h2 style={{ marginBottom: '20px', fontSize: '28px' }}>Speech Evaluation Skipped</h2>
+            <p style={{ fontSize: '18px', marginBottom: '15px', lineHeight: '1.6' }}>
+              Based on your position type (<strong>{applicantInfo?.positionType}</strong>), 
+              the speech evaluation has been automatically skipped.
+            </p>
+            <p style={{ fontSize: '16px', opacity: '0.9', marginBottom: '30px' }}>
+              This test is only required for voice positions.
+            </p>
+            
+            <button
+              onClick={() => {
+                // Mark speech evaluation as complete when button is clicked
+                if (onComplete) {
+                  onComplete({
+                    testType: 'speech',
+                    score: 0,
+                    totalQuestions: 0,
+                    questionsAnswered: 0,
+                    skipped: true,
+                    reason: 'Non-voice position'
+                  });
+                }
+                
+                // Move to next test
+                if (onNext) {
+                  onNext();
+                }
+              }}
+              style={{
+                background: 'white',
+                color: '#667eea',
+                border: 'none',
+                padding: '15px 40px',
+                fontSize: '18px',
+                fontWeight: '600',
+                borderRadius: '25px',
+                cursor: 'pointer',
+                transition: 'all 0.3s ease',
+                boxShadow: '0 4px 10px rgba(0, 0, 0, 0.1)'
+              }}
+              onMouseOver={(e) => {
+                e.target.style.transform = 'translateY(-2px)';
+                e.target.style.boxShadow = '0 6px 20px rgba(0, 0, 0, 0.15)';
+              }}
+              onMouseOut={(e) => {
+                e.target.style.transform = 'translateY(0)';
+                e.target.style.boxShadow = '0 4px 10px rgba(0, 0, 0, 0.1)';
+              }}
+            >
+              ➡️ Continue to Next Test
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="main-content-vertical">

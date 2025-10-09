@@ -12,6 +12,9 @@ personality_bp = Blueprint('personality', __name__)
 def get_personality_test_questions():
     """Get personality test questions"""
     try:
+        # Get session ID from query parameters (optional for personality test)
+        session_id = request.args.get("session_id")
+        
         # Load all questions from MongoDB
         all_questions = load_personality_test_questions()
         
@@ -29,6 +32,9 @@ def get_personality_test_questions():
                 "category": question.get("category", "personality")
             }
             questions_for_frontend.append(question_copy)
+        
+        if session_id:
+            print(f"DEBUG: Session {session_id} - Loaded {len(questions_for_frontend)} personality test questions")
             
         return jsonify({
             "success": True,

@@ -47,7 +47,7 @@ def judge_answer_2(question, answer, scores=None):
       "relevance": 0,
       "grammar_lexis": 0,
       "communication_skills": 0,
-      "fluency_pronunciation": 0,
+      "fluency_pronunciation": 0
       "customer_service_fit": 0
     },
     "comment": "The transcript was empty or unintelligible. Please ensure the response is clearly audible."

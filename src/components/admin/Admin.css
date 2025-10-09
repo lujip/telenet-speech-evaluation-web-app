@@ -285,13 +285,22 @@
   -webkit-box-orient: vertical;
 }
 .applicant-phone,
-.applicant-email,
-.applicant-gender {
+.applicant-email {
   font-size: 0.8rem;
   color: #64748b;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.applicant-type {
+  font-size: 0.8rem;
+  color: #2F6798;
+  font-weight: 650;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: center;
 }
 
 .list-status {

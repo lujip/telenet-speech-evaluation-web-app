@@ -1,6 +1,6 @@
 import random
 from config import MAX_QUESTIONS_PER_SESSION
-from .file_ops import load_questions, load_listening_test_questions
+from .file_ops import load_questions, load_listening_test_questions, load_written_test_questions
 
 # Global variables for session management
 session_states = {}  # Store session state for each session ID
@@ -15,6 +15,7 @@ def get_session_state(session_id):
             'listening_current_index': 0,  # Start at first listening question
             'listening_questions': None,  # Listening questions not loaded yet
             'listening_has_answered': set(),  # Track answered listening questions
+            'written_questions': None,  # Written test questions not loaded yet
             'test_completion': {  # Track which tests are completed
                 'listening': False,
                 'written': False,
@@ -234,4 +235,26 @@ def get_listening_test_question_by_id(question_id):
     for question in all_questions:  # Iterate through questions
         if question.get("id") == question_id:  # Check if ID matches
             return question  # Return matching question
-    return None  # Return None if question not found 
+    return None  # Return None if question not found
+
+def get_active_written_test_questions_for_session(session_id):
+    """Get active written test questions for a specific session (randomized once per session)"""
+    state = get_session_state(session_id)  # Get current session state
+    
+    # If we already have session written questions, return them
+    if state['written_questions'] is not None:  # Check if written questions already loaded
+        return state['written_questions']  # Return cached written questions
+    
+    # Otherwise, randomize and store for this session
+    all_questions = load_written_test_questions()  # Load all written test questions
+    active_questions = [q for q in all_questions if q.get("active", True)]  # Filter active questions only
+    
+    # Randomize and select only 20 questions per session
+    if len(active_questions) > 20:  # Check if we have more than 20 questions
+        random.shuffle(active_questions)  # Randomize question order
+        active_questions = active_questions[:20]  # Limit to 20 questions per session
+    
+    # Store for this session
+    state['written_questions'] = active_questions  # Cache written questions for this session
+    set_session_state(session_id, state)  # Save updated state
+    return active_questions  # Return active written questions list 

@@ -76,7 +76,9 @@ const GenericWrittenTest = ({
   const fetchQuestions = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(fetchQuestionsUrl);
+      // Add session_id as query parameter
+      const url = `${fetchQuestionsUrl}?session_id=${sessionId}`;
+      const response = await axios.get(url);
       
       if (response.data.success) {
         let loadedQuestions = response.data.questions;

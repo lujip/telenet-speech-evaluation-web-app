@@ -16,8 +16,8 @@ import { SessionProvider } from './contexts/SessionContext.jsx'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 
 // Debug logging
-console.log('TestingPage component:', TestingPage);
-console.log('All routes loaded in main.jsx');
+// console.log('TestingPage component:', TestingPage);
+// console.log('All routes loaded in main.jsx');
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>

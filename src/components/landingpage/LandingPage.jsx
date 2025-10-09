@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { useSession } from '../../contexts/SessionContext.jsx';
 
 const LandingPage = () => { 
-  console.log("LandingPage component mounted");
+  // console.log("LandingPage component mounted");
   const navigate = useNavigate();
   const { applicantInfo, sessionId, clearSession } = useSession();
   
@@ -52,7 +52,7 @@ const LandingPage = () => {
             <div className="landing-page-test-item">
               <div className="landing-page-test-icon">🗣️</div>
               <h3>Speech Evaluation</h3>
-              <p>Record verbal responses to interview questions (30-60 seconds each)</p>
+              <p>Record verbal responses to interview questions (60 seconds each)</p>
             </div>
             <div className="landing-page-test-item">
               <div className="landing-page-test-icon">🧠</div>
@@ -73,7 +73,7 @@ const LandingPage = () => {
           <ul>
             <li><strong>Listening Test:</strong> Multiple-choice questions based on customer service scenarios</li>
             <li><strong>Written Test:</strong> Professional written responses to job-related questions</li>
-            <li><strong>Speech Evaluation:</strong> 5-6 interview questions with 30-60 second responses</li>
+            <li><strong>Speech Evaluation:</strong> 5 interview questions with 60 second responses</li>
             <li><strong>Personality Assessment:</strong> Psychological evaluation to assess work style and traits</li>
             <li><strong>Typing Test:</strong> 60-second speed and accuracy assessment</li>
             
