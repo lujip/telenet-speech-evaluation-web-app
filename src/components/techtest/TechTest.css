@@ -26,18 +26,18 @@
 }
 
 .tech-test-subtitle {
-  font-size: 1.1rem;
+  font-size: 1.5rem;
   color: #6b7280;
-  text-align: center;
   margin-bottom: 0.5rem 3rem;
   font-weight: 500;
+  text-align: left;
 }
 
 .tests-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
   gap: 2rem;
-  margin-bottom: 3rem;
+  margin-bottom: 10px;
 }
 
 .test-card {
@@ -213,10 +213,11 @@
 
 .evaluation-button-container {
   text-align: center;
-  padding: 2rem;
+  padding: 10px;
   background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
   border-radius: 16px;
   border: 2px solid #e2e8f0;
+  margin-bottom: 10px;
 }
 
 .start-evaluation-button {
@@ -249,10 +250,10 @@
   transform: translateY(-1px);
 }
 
-.completion-message {
+.tech-test-completion-message {
   color: #6b7280;
   font-size: 0.9rem;
-  margin-top: 1rem;
+  margin-top: 0;
   font-weight: 500;
 }
 

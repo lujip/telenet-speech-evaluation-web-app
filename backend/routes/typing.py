@@ -62,7 +62,7 @@ def submit_typing_test():
         typing_result = {
             "type": "typing",
             "test_id": test_id,
-            "timestamp": datetime.now().isoformat(),
+            "timestamp": datetime.utcnow().isoformat() + 'Z',
             "typed_text": typed_text,
             "typed_words": typed_words,
             "time_taken_seconds": time_taken,

@@ -147,7 +147,7 @@ def submit_written_test():
         written_result = {
             "type": "written",
             "session_id": session_id,
-            "timestamp": datetime.now().isoformat(),
+            "timestamp": datetime.utcnow().isoformat() + 'Z',
             "total_questions": total_questions,
             "correct_answers": correct_count,
             "score_percentage": round(score_percentage, 2),

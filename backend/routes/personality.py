@@ -132,7 +132,7 @@ def submit_personality_test():
         personality_result = {
             "type": "personality",
             "session_id": session_id,
-            "timestamp": datetime.now().isoformat(),
+            "timestamp": datetime.utcnow().isoformat() + 'Z',
             "total_questions": total_questions,
             "question_results": question_results,
             "category_analysis": category_analysis,

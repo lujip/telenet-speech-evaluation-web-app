@@ -326,8 +326,14 @@ def admin_delete_applicant(session_id):
             else:
                 return jsonify({"success": False, "message": f"Applicant with ID '{session_id}' not found"}), 404  # Return not found error
         
-        # Save updated applicants data
-        save_applicants(applicants_data)
+        # Delete the applicant directly from MongoDB
+        from utils.db import db
+        delete_result = db.applicants.delete_one({"id": session_id})
+        
+        if delete_result.deleted_count > 0:
+            print(f"Successfully deleted applicant {session_id} from MongoDB")  # Log successful database deletion
+        else:
+            print(f"Warning: Applicant {session_id} was not found in MongoDB, but continuing with cleanup")
         
         # Clean up temporary files and recordings
         cleanup_temp_files(session_id)  # Remove temporary data files
@@ -497,7 +503,7 @@ def add_applicant_comment(applicant_id):
             "id": str(uuid.uuid4()),
             "comment": data['comment'],
             "evaluator": data.get('evaluator', 'Unknown User'),
-            "timestamp": datetime.now().isoformat(),
+            "timestamp": datetime.utcnow().isoformat() + 'Z',
             "user_id": request.current_user.get('id') if hasattr(request, 'current_user') else None,
             "user_role": request.current_user.get('role') if hasattr(request, 'current_user') else None
         }
@@ -639,7 +645,7 @@ def update_applicant_status(applicant_id):
             
             # Also update last_updated timestamp
             from datetime import datetime
-            applicants_data["applicants"][applicant_index]["last_updated"] = datetime.now().isoformat()
+            applicants_data["applicants"][applicant_index]["last_updated"] = datetime.utcnow().isoformat() + 'Z'
             
             # Save updated applicants data
             if not save_applicants(applicants_data):

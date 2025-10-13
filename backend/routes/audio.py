@@ -72,6 +72,9 @@ def evaluate():
     # Add audio path to result
     result["audio_path"] = audio_path  # Include audio file path in result
     
+    # Add UTC timestamp to result
+    result["timestamp"] = datetime.utcnow().isoformat() + 'Z'  # Record evaluation time in UTC
+    
     # Save evaluation result
     if session_id:  # Check if session ID exists
         # Load existing temp evaluations for this session
@@ -208,7 +211,7 @@ def evaluate_listening_test():
         "is_correct": is_correct,
         "accuracy_percentage": round(accuracy_percentage, 1),
         "audio_path": audio_path,
-        "timestamp": datetime.now().isoformat()
+        "timestamp": datetime.utcnow().isoformat() + 'Z'
     }
     
     # Save evaluation result to listening test section

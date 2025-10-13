@@ -19,6 +19,10 @@ const TechTest = () => {
   const [testAudioUrl, setTestAudioUrl] = useState(null);
   const [allTestsPassed, setAllTestsPassed] = useState(false);
   
+  // Track user interactions with microphone test
+  const [hasTestedMicrophone, setHasTestedMicrophone] = useState(false);
+  const [hasPlayedRecording, setHasPlayedRecording] = useState(false);
+  
   // Refs for audio visualization
   const canvasRef = useRef(null);
   const audioContextRef = useRef(null);
@@ -30,13 +34,15 @@ const TechTest = () => {
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
 
-  // Check if all tests passed
+  // Check if all tests passed AND microphone has been tested/played
   useEffect(() => {
     const allPassed = micTest.status === 'passed' && 
                      audioTest.status === 'passed' && 
-                     internetTest.status === 'passed';
+                     internetTest.status === 'passed' &&
+                     hasTestedMicrophone &&
+                     hasPlayedRecording;
     setAllTestsPassed(allPassed);
-  }, [micTest, audioTest, internetTest]);
+  }, [micTest, audioTest, internetTest, hasTestedMicrophone, hasPlayedRecording]);
 
   // Initialize tests when component mounts
   useEffect(() => {
@@ -229,6 +235,7 @@ const TechTest = () => {
         const audioUrl = URL.createObjectURL(audioBlob);
         setAudioUrl(audioUrl);
         setTestAudioUrl(audioUrl);
+        setHasTestedMicrophone(true); // Mark that microphone has been tested
       };
       
       mediaRecorder.start();
@@ -255,6 +262,7 @@ const TechTest = () => {
     if (testAudioUrl) {
       const audio = new Audio(testAudioUrl);
       audio.play();
+      setHasPlayedRecording(true); // Mark that recording has been played
     }
   };
 
@@ -316,7 +324,28 @@ const TechTest = () => {
       <div className="tech-test-content">
         <h1 className="tech-test-title">Technical Requirements Check</h1>
         <p className="tech-test-subtitle">
-          Please complete all tests below before starting your evaluation
+        {!allTestsPassed && (
+            <div className="tech-test-completion-message">
+              <p>Before starting the evaluation, you must:</p>
+              <ul style={{ textAlign: 'left', marginTop: '10px' }}>
+                <li style={{ color: micTest.status === 'passed' ? '#10b981' : '#ef4444' }}>
+                  {micTest.status === 'passed' ? '✅' : '❌'} Pass microphone test
+                </li>
+                <li style={{ color: audioTest.status === 'passed' ? '#10b981' : '#ef4444' }}>
+                  {audioTest.status === 'passed' ? '✅' : '❌'} Pass audio playback test
+                </li>
+                <li style={{ color: internetTest.status === 'passed' ? '#10b981' : '#ef4444' }}>
+                  {internetTest.status === 'passed' ? '✅' : '❌'} Pass internet connection test
+                </li>
+                <li style={{ color: hasTestedMicrophone ? '#10b981' : '#f59e0b' }}>
+                  {hasTestedMicrophone ? '✅' : '⚠️'} Click "Test Microphone" and record your voice
+                </li>
+                <li style={{ color: hasPlayedRecording ? '#10b981' : '#f59e0b' }}>
+                  {hasPlayedRecording ? '✅' : '⚠️'} Click "Play Recording" to hear your voice
+                </li>
+              </ul>
+            </div>
+          )}
         </p>
 
         <div className="tests-grid">
@@ -464,14 +493,10 @@ const TechTest = () => {
             disabled={!allTestsPassed}
             className="start-evaluation-button"
           >
-            {allTestsPassed ? 'Start Evaluation' : 'Complete All Tests First'}
+            {allTestsPassed ? 'Start Evaluation' : 'Complete All Requirements First'}
           </button>
           
-          {!allTestsPassed && (
-            <p className="completion-message">
-              All tests must pass before you can start the evaluation
-            </p>
-          )}
+ 
         </div>
       </div>
     </div>

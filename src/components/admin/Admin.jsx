@@ -38,7 +38,7 @@ const Admin = () => {
 
   const API_URL = import.meta.env.VITE_API_URL;
   
-  const AUTO_LOGOUT_TIME = 10 * 60 * 1000; // 10 minutes in milliseconds
+  const AUTO_LOGOUT_TIME = 8 * 60 * 60 * 1000; // 8 hours in milliseconds
   const WARNING_TIME = 60 * 1000; // Show warning 1 minute before logout
 
   // Configure axios to include auth token
@@ -90,7 +90,7 @@ const Admin = () => {
     // Clear existing timers
     clearAllTimers();
 
-    // Set warning timer (9 minutes)
+    // Set warning timer (8 hours minus 1 minute = 7 hours 59 minutes)
     warningTimerRef.current = setTimeout(() => {
       setShowLogoutWarning(true);
       setWarningCountdown(60);
@@ -107,7 +107,7 @@ const Admin = () => {
       }, 1000);
     }, AUTO_LOGOUT_TIME - WARNING_TIME);
 
-    // Set auto-logout timer (10 minutes)
+    // Set auto-logout timer (8 hours)
     logoutTimerRef.current = setTimeout(() => {
       handleAutoLogout();
     }, AUTO_LOGOUT_TIME);
@@ -415,11 +415,11 @@ const Admin = () => {
       }
     }
     
-    // Calculate merged score: (Speech + Listening) / 2
+    // Calculate merged score: 60% Speech + 40% Listening (weighted average)
     // Note: listeningScore is in percentage (0-100), so divide by 10 to get 0-10 scale
     const listeningScoreNormalized = parseFloat(listeningScore) / 10;
-    const mergedScore = (parseFloat(speechScore) + listeningScoreNormalized) / 2;
-    const passFail = mergedScore >= 7.0 ? 'PASS' : 'FAIL';
+    const mergedScore = (parseFloat(speechScore) * 0.6) + (listeningScoreNormalized * 0.4);
+    const passFail = mergedScore <= 6.9 ? 'FAIL' : 'PASS';
     
     return {
       speech: speechScore.toFixed(1),

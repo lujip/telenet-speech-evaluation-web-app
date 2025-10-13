@@ -42,6 +42,9 @@ def store_applicant():
         if not re.match(email_pattern, applicant_info.get('email', '')):
             return jsonify({"success": False, "message": "Invalid email format"}), 400
 
+        # Override client timestamp with server UTC timestamp to ensure consistency
+        applicant_data['timestamp'] = datetime.utcnow().isoformat() + 'Z'
+
         # Save to temporary storage
         if not save_temp_applicant(applicant_data, session_id):
             return jsonify({"success": False, "message": "Failed to save applicant data"}), 500
@@ -78,8 +81,8 @@ def finish_evaluation():
                     "applicant_info": applicant_data.get('applicant', {}),  # Extract applicant details
                     "application_timestamp": applicant_data.get('timestamp'),  # Get application time
                     "total_questions": 0,  # Will calculate total from all sections
-                    "completion_timestamp": datetime.now().isoformat(),  # Record completion time
-                    "last_updated": datetime.now().isoformat(),  # Update timestamp
+                    "completion_timestamp": datetime.utcnow().isoformat() + 'Z',  # Record completion time in UTC
+                    "last_updated": datetime.utcnow().isoformat() + 'Z',  # Update timestamp in UTC
                     "comments": []  # Initialize empty comments array
                 }
                 
