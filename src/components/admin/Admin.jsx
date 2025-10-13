@@ -383,6 +383,10 @@ const Admin = () => {
   };
   */}
   const getTestScores = (applicant) => {
+    // Check if applicant is non-voice
+    const positionType = applicant.applicant_info?.positionType || '';
+    const isNonVoice = positionType.toLowerCase() === 'non-voice';
+    
     // Get scores for each test type
     const speechScore = applicant.speech_eval && applicant.speech_eval.length > 0 
       ? applicant.speech_eval.reduce((sum, evalItem) => sum + (evalItem.evaluation?.score || 0), 0) / applicant.speech_eval.length
@@ -415,14 +419,24 @@ const Admin = () => {
       }
     }
     
-    // Calculate merged score: 60% Speech + 40% Listening (weighted average)
+    // Calculate merged score based on position type
     // Note: listeningScore is in percentage (0-100), so divide by 10 to get 0-10 scale
     const listeningScoreNormalized = parseFloat(listeningScore) / 10;
-    const mergedScore = (parseFloat(speechScore) * 0.6) + (listeningScoreNormalized * 0.4);
-    const passFail = mergedScore <= 6.9 ? 'FAIL' : 'PASS';
+    let mergedScore;
+    let passFail;
+    
+    if (isNonVoice) {
+      // For non-voice: merged score is only the listening score
+      mergedScore = listeningScoreNormalized;
+      passFail = mergedScore <= 6.9 ? 'FAIL' : 'PASS';
+    } else {
+      // For voice: 50% Speech + 50% Listening (equal weight)
+      mergedScore = (parseFloat(speechScore) + listeningScoreNormalized) / 2;
+      passFail = mergedScore <= 6.9 ? 'FAIL' : 'PASS';
+    }
     
     return {
-      speech: speechScore.toFixed(1),
+      speech: isNonVoice ? 'non-voice' : speechScore.toFixed(1),
       listening: listeningScore.toFixed(1),
       written: writtenScore.toFixed(1),
       typing: typingScore.toFixed(1),
@@ -646,7 +660,11 @@ const Admin = () => {
                       
                       <div className="stat-item">
                         <span>Speech Score:</span>
-                        <span>{getTestScores(applicant).speech}/10</span>
+                        <span>
+                          {getTestScores(applicant).speech === 'non-voice' 
+                            ? 'non-voice' 
+                            : `${getTestScores(applicant).speech}/10`}
+                        </span>
                       </div>
                       <div className="stat-item">
                         <span>Listening Score:</span>
@@ -737,7 +755,11 @@ const Admin = () => {
                         <div className="scores-grid-container">
                           <div className="score-row">
                             <span className="score-label">Speech:</span>
-                            <span className="score-value">{testScores.speech}/10</span>
+                            <span className="score-value">
+                              {testScores.speech === 'non-voice' 
+                                ? 'non-voice' 
+                                : `${testScores.speech}/10`}
+                            </span>
                           </div>
                           <div className="score-row">
                             <span className="score-label">Personality:</span>
