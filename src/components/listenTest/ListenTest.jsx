@@ -38,6 +38,7 @@
     const animationRef = useRef(null);
     const canvasRef = useRef(null);
     const dataArrayRef = useRef(null);
+    const stopButtonRef = useRef(null);
 
       // Initialize listening test when component mounts
   useEffect(() => {
@@ -165,6 +166,16 @@
         setError(null);
         setIsRecording(true);
         setHasAnswered(true);
+        
+        // Scroll to stop recording button
+        setTimeout(() => {
+          if (stopButtonRef.current) {
+            stopButtonRef.current.scrollIntoView({ 
+              behavior: 'smooth', 
+              block: 'center' 
+            });
+          }
+        }, 100);
         
         // Get microphone access
         const stream = await navigator.mediaDevices.getUserMedia({ 
@@ -511,6 +522,7 @@
                       />
                     </div>
                     <button 
+                      ref={stopButtonRef}
                       onClick={stopRecording} 
                       className="stop-recording-button"
                     >
