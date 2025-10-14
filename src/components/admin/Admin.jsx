@@ -646,10 +646,9 @@ const Admin = () => {
                     </div>
                     
                     <div className="applicant-info">
-                      <p><strong>Email:</strong> {applicant.applicant_info?.email || 'N/A'}</p>
-                      <p><strong>Position Applied:</strong> {applicant.applicant_info?.positionApplied || 'N/A'}</p>
-                      <p><strong>Cell Phone:</strong> {applicant.applicant_info?.cellphoneNumber || applicant.applicant_info?.landlineNumber || 'N/A'}</p>
-                      <p><strong>Gender:</strong> {applicant.applicant_info?.gender || 'N/A'}</p>
+                      <p><strong>Position:</strong> {applicant.applicant_info?.positionApplied || 'N/A'}</p>
+                      <p><strong>Type:</strong> {applicant.applicant_info?.positionType || 'N/A'}</p>
+                      <p><strong>Phone:</strong> {applicant.applicant_info?.cellphoneNumber || applicant.applicant_info?.landlineNumber || 'N/A'}</p>
                       <p><strong>Applied:</strong> {formatDate(applicant.application_timestamp)}</p>
                       {applicant.completion_timestamp && (
                         <p><strong>Completed:</strong> {formatDate(applicant.completion_timestamp)}</p>
@@ -657,9 +656,8 @@ const Admin = () => {
                     </div>
 
                     <div className="applicant-stats">
-                      
                       <div className="stat-item">
-                        <span>Speech Score:</span>
+                        <span>Speech:</span>
                         <span>
                           {getTestScores(applicant).speech === 'non-voice' 
                             ? 'non-voice' 
@@ -667,16 +665,26 @@ const Admin = () => {
                         </span>
                       </div>
                       <div className="stat-item">
-                        <span>Listening Score:</span>
+                        <span>Personality:</span>
+                        <span>{getTestScores(applicant).personality}</span>
+                      </div>
+                      <div className="stat-item">
+                        <span>Listen:</span>
                         <span>{(parseFloat(getTestScores(applicant).listening) / 10).toFixed(1)}/10</span>
                       </div>
                       <div className="stat-item">
-                        <span>Written Score:</span>
+                        <span>Written:</span>
                         <span>{getTestScores(applicant).written}%</span>
                       </div>
                       <div className="stat-item">
-                        <span>Typing Score (WPM):</span>
-                        <span>{getTestScores(applicant).typing}</span>
+                        <span>Score:</span>
+                        <span style={{ color: parseFloat(getTestScores(applicant).merged) >= 7.0 ? '#10b981' : '#ef4444' }}>
+                          {getTestScores(applicant).merged}/10
+                        </span>
+                      </div>
+                      <div className="stat-item">
+                        <span>Typing:</span>
+                        <span>{getTestScores(applicant).typing} WPM</span>
                       </div>
                     </div>
 
