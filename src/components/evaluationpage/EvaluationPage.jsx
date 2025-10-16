@@ -57,8 +57,8 @@ const EvaluationPage = ({ onComplete, onNext }) => {
   // Reset evaluation state when component mounts (new session)
   useEffect(() => {
     if (applicantInfo && sessionId && !hasSpokenInitialQuestion && !shouldSkipSpeech) {
-      // Check current session state from backend
-      checkSessionState();
+      // Check current session state from backend with resume support
+      checkSessionStateAndResume();
       setHasSpokenInitialQuestion(true);
       // Start session timer
       setIsSessionStarted(true);
@@ -82,10 +82,63 @@ const EvaluationPage = ({ onComplete, onNext }) => {
     return () => clearInterval(sessionTimer);
   }, [isSessionStarted, sessionTimeLeft]);
 
-  // Check current session state from backend
-  const checkSessionState = async () => {
+  // Check current session state from backend and resume from last checkpoint
+  const checkSessionStateAndResume = async () => {
     try {
-      // Get current question and count for this session
+      // Get session progress first to see if we need to resume
+      const progressRes = await axios.get(`${API_URL}/session_progress?session_id=${sessionId}`);
+      
+      if (progressRes.data.success) {
+        const progress = progressRes.data;
+        console.log('Session progress loaded:', progress);
+        
+        // If there are answered questions, resume from last checkpoint
+        if (progress.speech_evaluation.answered_count > 0 && 
+            !progress.speech_evaluation.is_complete) {
+          console.log('Resuming speech evaluation from checkpoint...');
+          
+          // Resume session from last unanswered question
+          const resumeRes = await axios.post(`${API_URL}/resume_session`, {
+            session_id: sessionId,
+            test_type: 'speech'
+          });
+          
+          if (resumeRes.data.success) {
+            if (resumeRes.data.all_complete) {
+              // All questions answered, test now marked complete, move to next test
+              console.log('All speech questions answered, moving to next test');
+              
+              // Call onComplete to update progress bar
+              if (onComplete) {
+                onComplete({
+                  testType: 'speech',
+                  score: 0, // Score will be calculated by admin
+                  totalQuestions: progress.speech_evaluation.total_questions,
+                  questionsAnswered: progress.speech_evaluation.answered_count,
+                  completed: true
+                });
+              }
+              
+              // Then move to next test
+              if (onNext) {
+                onNext();
+              }
+              return;
+            } else if (resumeRes.data.resumed) {
+              // Set up resumed question
+              setQuestion(resumeRes.data.question.text);
+              setQuestionKeywords(resumeRes.data.question.keywords || []);
+              setCurrentAudioId(resumeRes.data.question.audio_id || '');
+              setCurrentQuestionIndex(resumeRes.data.current_index);
+              setTotalQuestions(progress.speech_evaluation.total_questions);
+              console.log(`Resumed at question ${resumeRes.data.current_index + 1}/${progress.speech_evaluation.total_questions}`);
+              return;
+            }
+          }
+        }
+      }
+      
+      // If no resume needed, get current question normally
       const [questionRes, countRes] = await Promise.all([
         axios.get(`${API_URL}/question?session_id=${sessionId}`),
         axios.get(`${API_URL}/question_count?session_id=${sessionId}`)
@@ -397,7 +450,7 @@ const EvaluationPage = ({ onComplete, onNext }) => {
   };
 
   // Handle session time up
-  const handleSessionTimeUp = () => {
+  const handleSessionTimeUp = async () => {
     console.log('Session time is up! Auto-completing evaluation...');
     
     // Stop any ongoing recording
@@ -411,6 +464,18 @@ const EvaluationPage = ({ onComplete, onNext }) => {
       setAudioElement(null);
     }
     setIsPlaying(false);
+    
+    // Mark speech test as completed in the backend
+    try {
+      await axios.post(`${API_URL}/mark_test_completed`, {
+        session_id: sessionId,
+        test_type: 'speech'
+      });
+      console.log('Speech test marked as completed in backend');
+    } catch (err) {
+      console.error('Error marking speech test as completed:', err);
+      // Continue anyway - don't block user progress
+    }
     
     // Complete the evaluation automatically
     if (onComplete) {
@@ -665,7 +730,19 @@ const EvaluationPage = ({ onComplete, onNext }) => {
               </button>
             ) : (
               <button
-                onClick={() => {
+                onClick={async () => {
+                  // Mark speech test as completed in the backend
+                  try {
+                    await axios.post(`${API_URL}/mark_test_completed`, {
+                      session_id: sessionId,
+                      test_type: 'speech'
+                    });
+                    console.log('Speech test marked as completed in backend');
+                  } catch (err) {
+                    console.error('Error marking speech test as completed:', err);
+                    // Continue anyway - don't block user progress
+                  }
+                  
                   // Complete speech evaluation and move to next test in pipeline
                   if (onComplete) {
                     onComplete({

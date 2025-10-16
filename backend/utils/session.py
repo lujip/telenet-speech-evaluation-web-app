@@ -1,34 +1,87 @@
 import random
+from datetime import datetime
 from config import MAX_QUESTIONS_PER_SESSION
 from .file_ops import load_questions, load_listening_test_questions, load_written_test_questions
+from .db import session_states_collection
 
-# Global variables for session management
-session_states = {}  # Store session state for each session ID
+# In-memory cache for performance (still used but backed by MongoDB)
+session_states_cache = {}  # Cache session state for each session ID
 
 def get_session_state(session_id):
-    """Get session state for a specific session"""
-    if session_id not in session_states:  # Check if session exists
-        session_states[session_id] = {  # Initialize new session state
-            'current_index': 0,  # Start at first question
-            'questions': None,  # Questions not loaded yet
-            'has_answered': set(),  # Track answered questions
-            'listening_current_index': 0,  # Start at first listening question
-            'listening_questions': None,  # Listening questions not loaded yet
-            'listening_has_answered': set(),  # Track answered listening questions
-            'written_questions': None,  # Written test questions not loaded yet
-            'test_completion': {  # Track which tests are completed
+    """Get session state for a specific session (from MongoDB)"""
+    # Check cache first
+    if session_id in session_states_cache:
+        return session_states_cache[session_id]
+    
+    # Try to load from MongoDB
+    session_doc = session_states_collection.find_one({'session_id': session_id})
+    
+    if session_doc:
+        # Convert stored data back to Python objects
+        state = {
+            'current_index': session_doc.get('current_index', 0),
+            'questions': session_doc.get('questions', None),
+            'has_answered': set(session_doc.get('has_answered', [])),
+            'listening_current_index': session_doc.get('listening_current_index', 0),
+            'listening_questions': session_doc.get('listening_questions', None),
+            'listening_has_answered': set(session_doc.get('listening_has_answered', [])),
+            'written_questions': session_doc.get('written_questions', None),
+            'test_completion': session_doc.get('test_completion', {
                 'listening': False,
                 'written': False,
                 'speech': False,
                 'personality': False,
                 'typing': False
-            }
+            }),
+            'last_updated': session_doc.get('last_updated')
         }
-    return session_states[session_id]  # Return existing or new session state
+        # Cache it
+        session_states_cache[session_id] = state
+        return state
+    
+    # Initialize new session state if not found
+    new_state = {
+        'current_index': 0,
+        'questions': None,
+        'has_answered': set(),
+        'listening_current_index': 0,
+        'listening_questions': None,
+        'listening_has_answered': set(),
+        'written_questions': None,
+        'test_completion': {
+            'listening': False,
+            'written': False,
+            'speech': False,
+            'personality': False,
+            'typing': False
+        },
+        'last_updated': datetime.utcnow().isoformat()
+    }
+    
+    # Save to MongoDB immediately
+    set_session_state(session_id, new_state)
+    return new_state
 
 def set_session_state(session_id, state):
-    """Set session state for a specific session"""
-    session_states[session_id] = state  # Update session state with new data
+    """Set session state for a specific session (save to MongoDB)"""
+    # Update timestamp
+    state['last_updated'] = datetime.utcnow().isoformat()
+    
+    # Convert sets to lists for MongoDB storage
+    state_to_save = state.copy()
+    state_to_save['has_answered'] = list(state.get('has_answered', set()))
+    state_to_save['listening_has_answered'] = list(state.get('listening_has_answered', set()))
+    state_to_save['session_id'] = session_id
+    
+    # Save to MongoDB (upsert)
+    session_states_collection.replace_one(
+        {'session_id': session_id},
+        state_to_save,
+        upsert=True
+    )
+    
+    # Update cache
+    session_states_cache[session_id] = state
 
 def get_active_questions_for_session(session_id):
     """Get active questions for a specific session (randomized once per session)"""
@@ -54,16 +107,19 @@ def get_active_questions_for_session(session_id):
 
 def reset_session_questions(session_id):
     """Reset session questions for new evaluation session"""
-    if session_id in session_states:  # Check if session exists
-        state = session_states[session_id]  # Get current session state
-        state['current_index'] = 0  # Reset to first question
-        state['has_answered'] = set()  # Clear answered questions tracking
-        set_session_state(session_id, state)  # Save reset state
+    state = get_session_state(session_id)  # Get current session state (loads from MongoDB)
+    state['current_index'] = 0  # Reset to first question
+    state['has_answered'] = set()  # Clear answered questions tracking
+    set_session_state(session_id, state)  # Save reset state to MongoDB
 
 def clear_session(session_id):
-    """Clear session state for a specific session"""
-    if session_id in session_states:  # Check if session exists
-        del session_states[session_id]  # Remove session from memory 
+    """Clear session state for a specific session (from MongoDB and cache)"""
+    # Remove from MongoDB
+    session_states_collection.delete_one({'session_id': session_id})
+    
+    # Remove from cache
+    if session_id in session_states_cache:
+        del session_states_cache[session_id] 
 
 def get_current_question_for_session(session_id):
     """Get current question for a specific session"""
@@ -126,7 +182,34 @@ def mark_question_answered(session_id, question_index):
     """Mark a question as answered for a session"""
     state = get_session_state(session_id)  # Get current session state
     state['has_answered'].add(question_index)  # Mark specific question as answered
-    set_session_state(session_id, state)  # Save updated state
+    set_session_state(session_id, state)  # Save updated state (persists to MongoDB)
+
+def get_next_unanswered_question_index(session_id):
+    """Get the index of the next unanswered question for resumption"""
+    state = get_session_state(session_id)
+    questions = get_active_questions_for_session(session_id)
+    
+    if not questions:
+        return 0
+    
+    # Find first unanswered question
+    for i in range(len(questions)):
+        if i not in state['has_answered']:
+            return i
+    
+    # All questions answered, return current index
+    return state.get('current_index', 0)
+
+def resume_session_from_last_checkpoint(session_id):
+    """Resume session from the last unanswered question"""
+    state = get_session_state(session_id)
+    next_index = get_next_unanswered_question_index(session_id)
+    
+    # Update current index to next unanswered question
+    state['current_index'] = next_index
+    set_session_state(session_id, state)
+    
+    return next_index
 
 def get_question_status(session_id):
     """Get question status for a session"""
@@ -139,9 +222,10 @@ def get_question_status(session_id):
     }
 
 def mark_test_completed(session_id, test_type):
+    """Mark a specific test as completed for a session (only if all questions answered)"""
     print(f"Marking {test_type} test as completed for session {session_id}")
-    """Mark a specific test as completed for a session"""
     state = get_session_state(session_id)  # Get current session state
+    
     if 'test_completion' not in state:  # Initialize if not exists
         state['test_completion'] = {
             'listening': False,
@@ -150,8 +234,34 @@ def mark_test_completed(session_id, test_type):
             'personality': False,
             'typing': False
         }
-    state['test_completion'][test_type] = True  # Mark test as completed
-    set_session_state(session_id, state)  # Save updated state
+    
+    # Validate that test should be marked complete based on test type
+    should_mark_complete = True
+    
+    if test_type == 'speech':
+        # Check if all speech questions are answered
+        questions = get_active_questions_for_session(session_id)
+        answered_count = len(state.get('has_answered', set()))
+        if questions and answered_count < len(questions):
+            should_mark_complete = False
+            print(f"Speech test not complete: {answered_count}/{len(questions)} questions answered")
+    elif test_type == 'listening':
+        # Check if all listening questions are answered
+        questions = get_active_listening_test_questions_for_session(session_id)
+        answered_count = len(state.get('listening_has_answered', set()))
+        if questions and answered_count < len(questions):
+            should_mark_complete = False
+            print(f"Listening test not complete: {answered_count}/{len(questions)} questions answered")
+    
+    # Only mark as completed if validation passed
+    if should_mark_complete:
+        state['test_completion'][test_type] = True  # Mark test as completed
+        set_session_state(session_id, state)  # Save updated state
+        print(f"Successfully marked {test_type} test as completed")
+    else:
+        print(f"Test {test_type} cannot be marked as completed yet")
+    
+    return should_mark_complete
 
 def get_next_test_to_resume(session_id):
     """Get the next test that should be resumed for a session"""
@@ -236,6 +346,34 @@ def get_listening_test_question_by_id(question_id):
         if question.get("id") == question_id:  # Check if ID matches
             return question  # Return matching question
     return None  # Return None if question not found
+
+def get_next_unanswered_listening_question_index(session_id):
+    """Get the index of the next unanswered listening test question for resumption"""
+    state = get_session_state(session_id)
+    questions = get_active_listening_test_questions_for_session(session_id)
+    
+    if not questions:
+        return 0
+    
+    # Find first unanswered question
+    listening_has_answered = state.get('listening_has_answered', set())
+    for i in range(len(questions)):
+        if i not in listening_has_answered:
+            return i
+    
+    # All questions answered, return current index
+    return state.get('listening_current_index', 0)
+
+def resume_listening_session_from_last_checkpoint(session_id):
+    """Resume listening test session from the last unanswered question"""
+    state = get_session_state(session_id)
+    next_index = get_next_unanswered_listening_question_index(session_id)
+    
+    # Update current index to next unanswered question
+    state['listening_current_index'] = next_index
+    set_session_state(session_id, state)
+    
+    return next_index
 
 def get_active_written_test_questions_for_session(session_id):
     """Get active written test questions for a specific session (randomized once per session)"""

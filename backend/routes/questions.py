@@ -3,7 +3,10 @@ from utils.session import (
     get_active_questions_for_session, get_session_state, set_session_state,
     get_current_question_for_session, move_to_next_question, 
     mark_question_answered, get_question_status, reset_session_questions,
-    get_active_listening_test_questions_for_session, get_question_by_index
+    get_active_listening_test_questions_for_session, get_question_by_index,
+    resume_session_from_last_checkpoint, resume_listening_session_from_last_checkpoint,
+    get_next_unanswered_question_index, get_next_unanswered_listening_question_index,
+    get_test_completion_status
 )
 from utils.tts import speak_async
 from utils.file_ops import (
@@ -290,4 +293,155 @@ def listening_test_reset():
             })
     
     print(f"DEBUG: Session {session_id} - No active listening test questions available for reset")
-    return jsonify({"success": False, "message": "No active listening test questions available"})  # Return error if no questions 
+    return jsonify({"success": False, "message": "No active listening test questions available"})  # Return error if no questions
+
+@questions_bp.route("/session_progress", methods=["GET"])
+def get_session_progress():
+    """Get current session progress for resumption after page reload"""
+    try:
+        session_id = request.args.get("session_id")
+        
+        if not session_id:
+            return jsonify({"success": False, "message": "Session ID required"}), 400
+        
+        # Get session state from MongoDB (persistent storage)
+        state = get_session_state(session_id)
+        
+        # Get test completion status
+        test_completion = get_test_completion_status(session_id)
+        
+        # Get speech evaluation progress
+        speech_questions = get_active_questions_for_session(session_id)
+        speech_next_index = get_next_unanswered_question_index(session_id)
+        speech_answered_count = len(state.get('has_answered', set()))
+        
+        # Get listening test progress
+        listening_questions = get_active_listening_test_questions_for_session(session_id)
+        listening_next_index = get_next_unanswered_listening_question_index(session_id)
+        listening_answered_count = len(state.get('listening_has_answered', set()))
+        
+        progress_data = {
+            "success": True,
+            "session_id": session_id,
+            "test_completion": test_completion,
+            "speech_evaluation": {
+                "current_index": speech_next_index,
+                "total_questions": len(speech_questions) if speech_questions else 0,
+                "answered_count": speech_answered_count,
+                "is_complete": test_completion.get('speech', False)
+            },
+            "listening_test": {
+                "current_index": listening_next_index,
+                "total_questions": len(listening_questions) if listening_questions else 0,
+                "answered_count": listening_answered_count,
+                "is_complete": test_completion.get('listening', False)
+            },
+            "last_updated": state.get('last_updated')
+        }
+        
+        print(f"Session {session_id} progress retrieved: Speech {speech_answered_count}/{len(speech_questions) if speech_questions else 0}, Listening {listening_answered_count}/{len(listening_questions) if listening_questions else 0}")
+        
+        return jsonify(progress_data)
+        
+    except Exception as e:
+        return jsonify({"success": False, "message": f"Error getting session progress: {str(e)}"}), 500
+
+@questions_bp.route("/resume_session", methods=["POST"])
+def resume_session():
+    """Resume session from last checkpoint (next unanswered question)"""
+    try:
+        data = request.json
+        session_id = data.get("session_id")
+        test_type = data.get("test_type", "speech")  # Default to speech evaluation
+        
+        if not session_id:
+            return jsonify({"success": False, "message": "Session ID required"}), 400
+        
+        # Import mark_test_completed here
+        from utils.session import mark_test_completed, get_session_state
+        
+        # Resume based on test type
+        if test_type == "listening":
+            questions = get_active_listening_test_questions_for_session(session_id)
+            state = get_session_state(session_id)
+            answered_count = len(state.get('listening_has_answered', set()))
+            
+            # Check if all questions are answered but test not marked complete
+            if answered_count >= len(questions):
+                print(f"All {len(questions)} listening questions answered, auto-marking test as complete")
+                mark_test_completed(session_id, 'listening')
+                return jsonify({
+                    "success": True,
+                    "resumed": False,
+                    "all_complete": True,
+                    "message": "All listening test questions completed"
+                })
+            
+            next_index = resume_listening_session_from_last_checkpoint(session_id)
+            
+            if next_index < len(questions):
+                current_question = questions[next_index]
+                return jsonify({
+                    "success": True,
+                    "resumed": True,
+                    "current_index": next_index,
+                    "question": {
+                        "text": current_question["text"],
+                        "id": current_question["id"],
+                        "audio_id": current_question.get("audio_id", "")
+                    },
+                    "message": f"Resumed listening test at question {next_index + 1}"
+                })
+            else:
+                # All questions done, mark complete
+                mark_test_completed(session_id, 'listening')
+                return jsonify({
+                    "success": True,
+                    "resumed": False,
+                    "all_complete": True,
+                    "message": "All listening test questions completed"
+                })
+        else:  # speech evaluation
+            questions = get_active_questions_for_session(session_id)
+            state = get_session_state(session_id)
+            answered_count = len(state.get('has_answered', set()))
+            
+            # Check if all questions are answered but test not marked complete
+            if answered_count >= len(questions):
+                print(f"All {len(questions)} speech questions answered, auto-marking test as complete")
+                mark_test_completed(session_id, 'speech')
+                return jsonify({
+                    "success": True,
+                    "resumed": False,
+                    "all_complete": True,
+                    "message": "All speech evaluation questions completed"
+                })
+            
+            next_index = resume_session_from_last_checkpoint(session_id)
+            
+            if next_index < len(questions):
+                current_question = get_question_by_index(session_id, next_index)
+                return jsonify({
+                    "success": True,
+                    "resumed": True,
+                    "current_index": next_index,
+                    "question": {
+                        "text": current_question["text"],
+                        "keywords": current_question.get("keywords", []),
+                        "id": current_question.get("id"),
+                        "audio_id": current_question.get("audio_id", "")
+                    },
+                    "message": f"Resumed speech evaluation at question {next_index + 1}"
+                })
+            else:
+                # All questions done, mark complete
+                mark_test_completed(session_id, 'speech')
+                return jsonify({
+                    "success": True,
+                    "resumed": False,
+                    "all_complete": True,
+                    "message": "All speech evaluation questions completed"
+                })
+        
+    except Exception as e:
+        return jsonify({"success": False, "message": f"Error resuming session: {str(e)}"}), 500 

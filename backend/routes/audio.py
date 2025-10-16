@@ -75,8 +75,12 @@ def evaluate():
     # Add UTC timestamp to result
     result["timestamp"] = datetime.utcnow().isoformat() + 'Z'  # Record evaluation time in UTC
     
-    # Save evaluation result
+    # Save evaluation result and mark question as answered (checkpoint)
     if session_id:  # Check if session ID exists
+        # Mark this question as answered in the session state (persist to MongoDB)
+        mark_question_answered(session_id, question_index)
+        print(f"Checkpoint: Marked speech question {question_index} as answered for session {session_id}")
+        
         # Load existing temp evaluations for this session
         temp_evaluations = load_temp_evaluation(session_id)
         if not temp_evaluations:
@@ -214,8 +218,17 @@ def evaluate_listening_test():
         "timestamp": datetime.utcnow().isoformat() + 'Z'
     }
     
-    # Save evaluation result to listening test section
+    # Save evaluation result to listening test section and mark question as answered (checkpoint)
     if session_id:  # Check if session ID exists
+        # Mark this listening question as answered in the session state (persist to MongoDB)
+        from utils.session import get_session_state, set_session_state
+        state = get_session_state(session_id)
+        listening_has_answered = state.get('listening_has_answered', set())
+        listening_has_answered.add(question_index)
+        state['listening_has_answered'] = listening_has_answered
+        set_session_state(session_id, state)
+        print(f"Checkpoint: Marked listening question {question_index} as answered for session {session_id}")
+        
         # Load existing temp evaluations for this session
         temp_evaluations = load_temp_evaluation(session_id)
         if not temp_evaluations:

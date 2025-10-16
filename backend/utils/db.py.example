@@ -1,0 +1,15 @@
+from pymongo import MongoClient
+
+# Connect to MongoDB
+# Local development:
+client = MongoClient('mongodb://localhost:27017/')
+
+# OR for remote MongoDB with authentication:
+# client = MongoClient('mongodb://username:password@host:port/database?authSource=admin')
+
+# Database name
+db = client['mongodb_test']  # Change to your database name
+
+# Collections
+session_states_collection = db['session_states']
+

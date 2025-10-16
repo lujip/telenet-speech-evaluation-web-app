@@ -79,7 +79,48 @@
         setLoading(true);
         setError(null);
         
-        // Reset listening test questions
+        // Check if we need to resume from a checkpoint
+        const progressRes = await axios.get(`${API_URL}/session_progress?session_id=${sessionId}`);
+        
+        if (progressRes.data.success) {
+          const progress = progressRes.data;
+          console.log('Listening test session progress loaded:', progress);
+          
+          // If there are answered questions and test is not complete, resume
+          if (progress.listening_test.answered_count > 0 && 
+              !progress.listening_test.is_complete) {
+            console.log('Resuming listening test from checkpoint...');
+            
+            // Resume session from last unanswered question
+            const resumeRes = await axios.post(`${API_URL}/resume_session`, {
+              session_id: sessionId,
+              test_type: 'listening'
+            });
+            
+            if (resumeRes.data.success) {
+              if (resumeRes.data.all_complete) {
+                // All questions answered, test now marked complete, move to next test
+                console.log('All listening questions answered, moving to next test');
+                setLoading(false);
+                handleTestComplete();
+                return;
+              } else if (resumeRes.data.resumed) {
+                // Set up resumed question
+                setCurrentQuestion(resumeRes.data.question.text);
+                setCurrentAudioId(resumeRes.data.question.audio_id || '');
+                setCurrentQuestionIndex(resumeRes.data.current_index);
+                setTotalQuestions(progress.listening_test.total_questions);
+                setHasPlayedAudio(false);
+                setIsSessionStarted(true);
+                setLoading(false);
+                console.log(`Resumed listening test at question ${resumeRes.data.current_index + 1}/${progress.listening_test.total_questions}`);
+                return;
+              }
+            }
+          }
+        }
+        
+        // If no resume needed, start fresh (reset listening test questions)
         const resetResponse = await axios.post(`${API_URL}/listening-test-reset`, {
           session_id: sessionId
         });
@@ -360,7 +401,19 @@
       }
     };
 
-    const handleTestComplete = () => {
+    const handleTestComplete = async () => {
+      try {
+        // Mark listening test as completed in the backend
+        await axios.post(`${API_URL}/mark_test_completed`, {
+          session_id: sessionId,
+          test_type: 'listening'
+        });
+        console.log('Listening test marked as completed in backend');
+      } catch (err) {
+        console.error('Error marking listening test as completed:', err);
+        // Continue anyway - don't block user progress
+      }
+      
       // Call onComplete callback with results
       if (onComplete) {
         onComplete({

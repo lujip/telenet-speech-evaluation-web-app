@@ -6,3 +6,6 @@ client = MongoClient('mongodb://admin:Ginabot7232@192.168.77.74:27017/mongodb_te
 
 db = client['recruitment']  # Use (or create) this database 
 #db = client['mongodb_test']
+
+# Collections
+session_states_collection = db['session_states']
