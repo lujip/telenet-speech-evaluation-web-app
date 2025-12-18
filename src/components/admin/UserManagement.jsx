@@ -31,6 +31,7 @@ const UserManagement = ({ currentUser, getAuthHeaders }) => {
       fetchUsers();
       fetchRoles();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentUser]);
 
   const fetchUsers = async () => {
@@ -68,6 +69,18 @@ const UserManagement = ({ currentUser, getAuthHeaders }) => {
   const handleCreateUser = async (e) => {
     e.preventDefault();
     
+    // Prevent evaluators from creating users
+    if (currentUser.role === 'evaluator') {
+      alert('Evaluators cannot create users');
+      return;
+    }
+    
+    // Validate role creation permissions
+    if ((formData.role === 'super_admin' || formData.role === 'admin') && currentUser.role !== 'super_admin') {
+      alert('Only Super Admins can create Super Admin or Admin users');
+      return;
+    }
+    
     try {
       const response = await axios.post(`${API_URL}/users`, formData, {
         headers: getAuthHeaders()
@@ -96,19 +109,38 @@ const UserManagement = ({ currentUser, getAuthHeaders }) => {
   const handleUpdateUser = async (e) => {
     e.preventDefault();
     
+    // Prevent evaluators from editing other users
+    if (currentUser.role === 'evaluator' && selectedUser.id !== currentUser.id) {
+      alert('Evaluators can only edit their own user details');
+      return;
+    }
+    
+    // Prevent admins from editing super admins
+    if (currentUser.role === 'admin' && selectedUser.role === 'super_admin') {
+      alert('Only Super Admins can edit Super Admin users');
+      return;
+    }
+    
     try {
       const updateData = { ...formData };
       if (!updateData.password) {
         delete updateData.password; // Don't update password if not provided
       }
       
-      const response = await axios.put(`${API_URL}/users/${selectedUser.id}`, updateData, {
+      // Evaluators use the /profile endpoint, others use /users/<id>
+      const endpoint = currentUser.role === 'evaluator' 
+        ? `${API_URL}/profile`
+        : `${API_URL}/users/${selectedUser.id}`;
+      
+      const response = await axios.put(endpoint, updateData, {
         headers: getAuthHeaders()
       });
       
       if (response.data.success) {
+        // Update user in the list
+        const updatedUser = response.data.user;
         setUsers(users.map(user => 
-          user.id === selectedUser.id ? response.data.user : user
+          user.id === selectedUser.id ? updatedUser : user
         ));
         setShowEditModal(false);
         setSelectedUser(null);
@@ -130,6 +162,19 @@ const UserManagement = ({ currentUser, getAuthHeaders }) => {
   };
 
   const handleDeleteUser = async (userId) => {
+    // Prevent evaluators from deleting users
+    if (currentUser.role === 'evaluator') {
+      alert('Evaluators cannot delete users');
+      return;
+    }
+    
+    // Prevent admins from deleting super admins
+    const userToDelete = users.find(u => u.id === userId);
+    if (currentUser.role === 'admin' && userToDelete.role === 'super_admin') {
+      alert('Only Super Admins can delete Super Admin users');
+      return;
+    }
+    
     if (!window.confirm('Are you sure you want to delete this user? This action cannot be undone.')) {
       return;
     }
@@ -156,6 +201,19 @@ const UserManagement = ({ currentUser, getAuthHeaders }) => {
   };
 
   const handleToggleStatus = async (userId) => {
+    // Prevent evaluators from toggling status
+    if (currentUser.role === 'evaluator') {
+      alert('Evaluators cannot change user status');
+      return;
+    }
+    
+    // Prevent admins from toggling super admin status
+    const userToToggle = users.find(u => u.id === userId);
+    if (currentUser.role === 'admin' && userToToggle.role === 'super_admin') {
+      alert('Only Super Admins can change Super Admin user status');
+      return;
+    }
+    
     try {
       const response = await axios.put(`${API_URL}/users/${userId}/toggle-status`, {}, {
         headers: getAuthHeaders()
@@ -180,6 +238,12 @@ const UserManagement = ({ currentUser, getAuthHeaders }) => {
   };
 
   const openEditModal = (user) => {
+    // Check if evaluator is trying to edit another user
+    if (currentUser.role === 'evaluator' && user.id !== currentUser.id) {
+      alert('Evaluators can only edit their own user details');
+      return;
+    }
+    
     setSelectedUser(user);
     setFormData({
       username: user.username,
@@ -210,12 +274,28 @@ const UserManagement = ({ currentUser, getAuthHeaders }) => {
     resetForm();
   };
 
+  // Evaluators need special handling - they can view and edit only their own profile
+  const isEvaluator = currentUser?.role === 'evaluator';
+  const isViewer = currentUser?.role === 'viewer';
+  
   if (!hasPermission('view_users')) {
     return (
       <div className="user-management">
         <div className="no-permission">
           <h3>Access Denied</h3>
           <p>You do not have permission to view user management.</p>
+        </div>
+      </div>
+    );
+  }
+  
+  // Viewers cannot see the user management page
+  if (isViewer) {
+    return (
+      <div className="user-management">
+        <div className="no-permission">
+          <h3>Access Denied</h3>
+          <p>Viewers do not have access to user management.</p>
         </div>
       </div>
     );
@@ -227,8 +307,8 @@ const UserManagement = ({ currentUser, getAuthHeaders }) => {
   return (
     <div className="user-management">
       <div className="user-management-header">
-        <h2>User Management</h2>
-        {hasPermission('manage_users') && (
+        <h2>{isEvaluator ? 'My Profile' : 'User Management'}</h2>
+        {hasPermission('manage_users') && (currentUser.role === 'super_admin' || currentUser.role === 'admin') && (
           <button 
             className="btn btn-primary"
             onClick={() => setShowCreateModal(true)}
@@ -246,39 +326,68 @@ const UserManagement = ({ currentUser, getAuthHeaders }) => {
               <th>Full Name</th>
               <th>Email</th>
               <th>Role</th>
-              <th>Status</th>
-              <th>Last Login</th>
+              {!isEvaluator && <th>Status</th>}
+              {!isEvaluator && <th>Last Login</th>}
               <th>Actions</th>
             </tr>
           </thead>
           <tbody>
-            {users.map(user => (
-              <tr key={user.id}>
-                <td>{user.username}</td>
-                <td className="full-name">{user.full_name}</td>
-                <td>{user.email}</td>
-                <td>
-                  <span className={`role-badge role-${user.role}`}>
-                    {user.role_name}
-                  </span>
-                </td>
-                <td>
-                  <span className={`status-badge ${user.active ? 'active' : 'inactive'}`}>
-                    {user.active ? 'Active' : 'Inactive'}
-                  </span>
-                </td>
-                <td>
-                  {user.last_login ? new Date(user.last_login).toLocaleDateString() : 'Never'}
-                </td>
-                <td className="actions">
-                  {hasPermission('manage_users') && (
-                    <>
+            {/* Evaluators only see their own profile */}
+            {isEvaluator ? (
+              users.filter(user => user.id === currentUser.id).map(user => (
+                <tr key={user.id}>
+                  <td>{user.username}</td>
+                  <td className="full-name">{user.full_name}</td>
+                  <td>{user.email}</td>
+                  <td>
+                    <span className={`role-badge role-${user.role}`}>
+                      {user.role_name}
+                    </span>
+                  </td>
+                  <td className="actions">
+                    <button 
+                      className="btn btn-sm btn-secondary"
+                      onClick={() => openEditModal(user)}
+                    >
+                      Edit Profile
+                    </button>
+                  </td>
+                </tr>
+              ))
+            ) : (
+              /* Admins and Super Admins see all users */
+              users.map(user => (
+                <tr key={user.id}>
+                  <td>{user.username}</td>
+                  <td className="full-name">{user.full_name}</td>
+                  <td>{user.email}</td>
+                  <td>
+                    <span className={`role-badge role-${user.role}`}>
+                      {user.role_name}
+                    </span>
+                  </td>
+                  <td>
+                    <span className={`status-badge ${user.active ? 'active' : 'inactive'}`}>
+                      {user.active ? 'Active' : 'Inactive'}
+                    </span>
+                  </td>
+                  <td>
+                    {user.last_login ? new Date(user.last_login).toLocaleDateString() : 'Never'}
+                  </td>
+                  <td className="actions">
+                    {/* Admins cannot edit super admins, only super admins can */}
+                    {(currentUser.role === 'super_admin' || user.role !== 'super_admin') && (
                       <button 
                         className="btn btn-sm btn-secondary"
                         onClick={() => openEditModal(user)}
+                        title={`Edit ${user.username}`}
                       >
                         Edit
                       </button>
+                    )}
+                    
+                    {/* Admins cannot toggle super admin status */}
+                    {(currentUser.role === 'super_admin' || user.role !== 'super_admin') && (
                       <button 
                         className={`btn btn-sm ${user.active ? 'btn-warning' : 'btn-success'}`}
                         onClick={() => handleToggleStatus(user.id)}
@@ -286,6 +395,10 @@ const UserManagement = ({ currentUser, getAuthHeaders }) => {
                       >
                         {user.active ? 'Deactivate' : 'Activate'}
                       </button>
+                    )}
+                    
+                    {/* Admins cannot delete super admins */}
+                    {(currentUser.role === 'super_admin' || user.role !== 'super_admin') && (
                       <button 
                         className="btn btn-sm btn-danger"
                         onClick={() => handleDeleteUser(user.id)}
@@ -293,11 +406,11 @@ const UserManagement = ({ currentUser, getAuthHeaders }) => {
                       >
                         Delete
                       </button>
-                    </>
-                  )}
-                </td>
-              </tr>
-            ))}
+                    )}
+                  </td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>
@@ -352,17 +465,22 @@ const UserManagement = ({ currentUser, getAuthHeaders }) => {
                 <select
                   value={formData.role}
                   onChange={(e) => setFormData({...formData, role: e.target.value})}
+                  disabled={Object.keys(roles).length === 0}
                 >
-                  {Object.entries(roles).map(([key, role]) => (
-                    <option key={key} value={key}>{role.name}</option>
-                  ))}
+                  {Object.keys(roles).length === 0 ? (
+                    <option value="">No roles available</option>
+                  ) : (
+                    Object.entries(roles).map(([key, role]) => (
+                      <option key={key} value={key}>{role.name}</option>
+                    ))
+                  )}
                 </select>
               </div>
               <div className="form-actions">
                 <button type="button" className="btn btn-secondary" onClick={closeModal}>
                   Cancel
                 </button>
-                <button type="submit" className="btn btn-primary">
+                <button type="submit" className="btn btn-primary" disabled={Object.keys(roles).length === 0}>
                   Create User
                 </button>
               </div>
@@ -376,19 +494,23 @@ const UserManagement = ({ currentUser, getAuthHeaders }) => {
         <div className="modal-overlay">
           <div className="modal">
             <div className="modal-header">
-              <h3>Edit User: {selectedUser.username}</h3>
+              <h3>{isEvaluator ? 'Edit My Profile' : `Edit User: ${selectedUser.username}`}</h3>
               <button className="close-btn" onClick={closeModal}>&times;</button>
             </div>
             <form onSubmit={handleUpdateUser}>
-              <div className="form-group">
-                <label>Username:</label>
-                <input
-                  type="text"
-                  value={formData.username}
-                  onChange={(e) => setFormData({...formData, username: e.target.value})}
-                  required
-                />
-              </div>
+              {/* Username field - hidden for evaluators editing own profile */}
+              {!isEvaluator && (
+                <div className="form-group">
+                  <label>Username:</label>
+                  <input
+                    type="text"
+                    value={formData.username}
+                    onChange={(e) => setFormData({...formData, username: e.target.value})}
+                    required
+                  />
+                </div>
+              )}
+              
               <div className="form-group">
                 <label>Password (leave blank to keep current):</label>
                 <input
@@ -397,6 +519,7 @@ const UserManagement = ({ currentUser, getAuthHeaders }) => {
                   onChange={(e) => setFormData({...formData, password: e.target.value})}
                 />
               </div>
+              
               <div className="form-group">
                 <label>Full Name:</label>
                 <input
@@ -406,6 +529,7 @@ const UserManagement = ({ currentUser, getAuthHeaders }) => {
                   required
                 />
               </div>
+              
               <div className="form-group">
                 <label>Email:</label>
                 <input
@@ -415,23 +539,28 @@ const UserManagement = ({ currentUser, getAuthHeaders }) => {
                   required
                 />
               </div>
-              <div className="form-group">
-                <label>Role:</label>
-                <select
-                  value={formData.role}
-                  onChange={(e) => setFormData({...formData, role: e.target.value})}
-                >
-                  {Object.entries(roles).map(([key, role]) => (
-                    <option key={key} value={key}>{role.name}</option>
-                  ))}
-                </select>
-              </div>
+              
+              {/* Role field - hidden for evaluators */}
+              {!isEvaluator && (
+                <div className="form-group">
+                  <label>Role:</label>
+                  <select
+                    value={formData.role}
+                    onChange={(e) => setFormData({...formData, role: e.target.value})}
+                  >
+                    {Object.entries(roles).map(([key, role]) => (
+                      <option key={key} value={key}>{role.name}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+              
               <div className="form-actions">
                 <button type="button" className="btn btn-secondary" onClick={closeModal}>
                   Cancel
                 </button>
                 <button type="submit" className="btn btn-primary">
-                  Update User
+                  {isEvaluator ? 'Update Profile' : 'Update User'}
                 </button>
               </div>
             </form>

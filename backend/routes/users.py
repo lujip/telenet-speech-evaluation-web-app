@@ -35,8 +35,8 @@ def login():
             if verify_password(password, user['password']):
                 token = generate_jwt_token(user)
                 if token:
-                    # Return user info without password
-                    user_response = {k: v for k, v in user.items() if k != 'password'}
+                    # Return user info without password and _id
+                    user_response = {k: v for k, v in user.items() if k not in ['password', '_id']}
                     user_response['permissions'] = get_user_permissions(user)
                     
                     return jsonify({
@@ -89,8 +89,8 @@ def verify_token():
     try:
         user = request.current_user
         
-        # Return user info without password
-        user_response = {k: v for k, v in user.items() if k != 'password'}
+        # Return user info without password and _id
+        user_response = {k: v for k, v in user.items() if k not in ['password', '_id']}
         user_response['permissions'] = get_user_permissions(user)
         
         return jsonify({
@@ -107,10 +107,10 @@ def get_users():
     try:
         users = load_users()
         
-        # Remove passwords from response
+        # Remove passwords and _id from response
         users_response = []
         for user in users:
-            user_data = {k: v for k, v in user.items() if k != 'password'}
+            user_data = {k: v for k, v in user.items() if k not in ['password', '_id']}
             user_data['role_name'] = USER_ROLES.get(user.get('role'), {}).get('name', 'Unknown')
             users_response.append(user_data)
         
@@ -126,6 +126,16 @@ def create_new_user():
         data = request.json
         if not data:
             return jsonify({"success": False, "message": "No user data provided"}), 400
+        
+        # Check role permissions: only super_admin can create super_admin or admin users
+        current_user_role = request.current_user.get('role')
+        target_role = data.get('role')
+        
+        if target_role in ['super_admin', 'admin'] and current_user_role != 'super_admin':
+            return jsonify({
+                "success": False, 
+                "message": f"Only Super Admins can create {target_role} users"
+            }), 403
         
         # Validate user data
         errors = validate_user_data(data)
@@ -169,6 +179,28 @@ def update_existing_user(user_id):
         if not existing_user:
             return jsonify({"success": False, "message": "User not found"}), 404
         
+        # Check if evaluator is trying to edit another user
+        current_user_role = request.current_user.get('role')
+        if current_user_role == 'evaluator' and user_id != request.current_user['id']:
+            return jsonify({
+                "success": False, 
+                "message": "Evaluators can only edit their own user details"
+            }), 403
+        
+        # Check if evaluator is trying to change password for another user
+        if current_user_role == 'evaluator' and 'password' in data and user_id != request.current_user['id']:
+            return jsonify({
+                "success": False, 
+                "message": "Evaluators cannot change other users' passwords"
+            }), 403
+        
+        # Check if admin is trying to edit a super admin
+        if current_user_role == 'admin' and existing_user.get('role') == 'super_admin':
+            return jsonify({
+                "success": False, 
+                "message": "Only Super Admins can edit Super Admin users"
+            }), 403
+        
         # Validate update data
         data['id'] = user_id  # For validation
         errors = validate_user_data(data, is_update=True)
@@ -211,6 +243,18 @@ def delete_existing_user(user_id):
         if user_id == request.current_user['id']:
             return jsonify({"success": False, "message": "Cannot delete your own account"}), 400
         
+        # Check if admin is trying to delete a super admin
+        user_to_delete = find_user_by_id(user_id)
+        if not user_to_delete:
+            return jsonify({"success": False, "message": "User not found"}), 404
+        
+        current_user_role = request.current_user.get('role')
+        if current_user_role == 'admin' and user_to_delete.get('role') == 'super_admin':
+            return jsonify({
+                "success": False, 
+                "message": "Only Super Admins can delete Super Admin users"
+            }), 403
+        
         success, message = delete_user(user_id)
         
         if success:
@@ -234,6 +278,14 @@ def toggle_user_status(user_id):
         if not user:
             return jsonify({"success": False, "message": "User not found"}), 404
         
+        # Check if admin is trying to toggle a super admin's status
+        current_user_role = request.current_user.get('role')
+        if current_user_role == 'admin' and user.get('role') == 'super_admin':
+            return jsonify({
+                "success": False, 
+                "message": "Only Super Admins can change Super Admin user status"
+            }), 403
+        
         new_status = not user.get('active', True)
         
         # Don't allow deactivating the last super admin
@@ -249,7 +301,7 @@ def toggle_user_status(user_id):
         })
         
         if updated_user:
-            user_response = {k: v for k, v in updated_user.items() if k != 'password'}
+            user_response = {k: v for k, v in updated_user.items() if k not in ['password', '_id']}
             user_response['role_name'] = USER_ROLES.get(updated_user.get('role'), {}).get('name', 'Unknown')
             
             status = "activated" if new_status else "deactivated"
@@ -271,15 +323,18 @@ def get_roles():
     try:
         current_user = request.current_user
         
-        # Super admins can see all roles, others see limited roles
+        # Super admins can see and assign all roles
         if current_user.get('role') == 'super_admin':
             available_roles = USER_ROLES
-        else:
-            # Non-super-admins can only assign roles below their level
+        # Admins can see and assign evaluator and viewer roles only
+        elif current_user.get('role') == 'admin':
             available_roles = {
                 k: v for k, v in USER_ROLES.items() 
-                if k not in ['super_admin']
+                if k in ['evaluator', 'viewer']
             }
+        # Evaluators and viewers cannot create users, so they get empty roles
+        else:
+            available_roles = {}
         
         return jsonify({"success": True, "roles": available_roles})
     except Exception as e:
@@ -292,8 +347,8 @@ def get_profile():
     try:
         user = request.current_user
         
-        # Return user info without password
-        user_response = {k: v for k, v in user.items() if k != 'password'}
+        # Return user info without password and _id
+        user_response = {k: v for k, v in user.items() if k not in ['password', '_id']}
         user_response['permissions'] = get_user_permissions(user)
         user_response['role_name'] = USER_ROLES.get(user.get('role'), {}).get('name', 'Unknown')
         
@@ -335,8 +390,68 @@ def update_profile():
         # Update user
         updated_user = update_user(user_id, update_data)
         if updated_user:
-            # Return user info without password
-            user_response = {k: v for k, v in updated_user.items() if k != 'password'}
+            # Return user info without password and _id (which is an ObjectId and not JSON serializable)
+            user_response = {k: v for k, v in updated_user.items() if k not in ['password', '_id']}
+            user_response['permissions'] = get_user_permissions(updated_user)
+            user_response['role_name'] = USER_ROLES.get(updated_user.get('role'), {}).get('name', 'Unknown')
+            
+            return jsonify({
+                "success": True, 
+                "message": "Profile updated successfully",
+                "user": user_response
+            })
+        else:
+            return jsonify({"success": False, "message": "Error updating profile"}), 500
+            
+    except Exception as e:
+        return jsonify({"success": False, "message": f"Error updating profile: {str(e)}"}), 500
+
+@users_bp.route("/evaluator-profile/<user_id>", methods=["PUT"])
+@require_permission("manage_users")
+def update_evaluator_profile(user_id):
+    """Allow evaluators to update their own profile details (including password)"""
+    try:
+        data = request.json
+        if not data:
+            return jsonify({"success": False, "message": "No update data provided"}), 400
+        
+        # Check if user exists
+        existing_user = find_user_by_id(user_id)
+        if not existing_user:
+            return jsonify({"success": False, "message": "User not found"}), 404
+        
+        # Only allow evaluators to update their own profile
+        if existing_user.get('role') != 'evaluator' or user_id != request.current_user['id']:
+            return jsonify({
+                "success": False, 
+                "message": "Only evaluators can use this endpoint to update their own profile"
+            }), 403
+        
+        # Only allow updating certain fields
+        allowed_fields = ['full_name', 'email', 'password']
+        update_data = {k: v for k, v in data.items() if k in allowed_fields}
+        
+        if not update_data:
+            return jsonify({"success": False, "message": "No valid fields to update"}), 400
+        
+        # Validate email if provided
+        if 'email' in update_data and update_data['email']:
+            import re
+            email_pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+            if not re.match(email_pattern, update_data['email']):
+                return jsonify({"success": False, "message": "Invalid email format"}), 400
+        
+        # Hash password if provided
+        if 'password' in update_data and update_data['password']:
+            update_data['password'] = hash_password(update_data['password'])
+        
+        update_data['updated_by'] = user_id
+        
+        # Update user
+        updated_user = update_user(user_id, update_data)
+        if updated_user:
+            # Return user info without password and _id (which is an ObjectId and not JSON serializable)
+            user_response = {k: v for k, v in updated_user.items() if k not in ['password', '_id']}
             user_response['permissions'] = get_user_permissions(updated_user)
             user_response['role_name'] = USER_ROLES.get(updated_user.get('role'), {}).get('name', 'Unknown')
             

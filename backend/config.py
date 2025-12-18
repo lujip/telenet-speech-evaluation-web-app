@@ -51,7 +51,7 @@ USER_ROLES = {
         "name": "Evaluator",
         "permissions": [
             "view_applicants", "view_questions", "view_evaluations", 
-            "edit_evaluations", "add_comments", "view_users"
+            "edit_evaluations", "add_comments", "view_users", "edit_own_profile"
         ]
     },
     "viewer": {
