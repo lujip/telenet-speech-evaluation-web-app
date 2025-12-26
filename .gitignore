@@ -32,6 +32,7 @@ backend/.mypy_cache/
 backend/.dmypy.json
 backend/dmypy.json
 backend/utils/db.py
+backend/utils/db_test.py
 
 # Temporary files
 *.tmp
