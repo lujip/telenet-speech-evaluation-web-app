@@ -7,29 +7,21 @@ load_dotenv()
 # File paths
 APPLICANTS_FILE = "data/applicants.json"
 RECORDINGS_DIR = "recordings"
+RESUME_DIR = "data/resume"
 QUESTIONS_FILE = "data/questions/questions.json"
 LISTENING_TEST_QUESTIONS_FILE = "data/questions/listening_test_questions.json"
 TYPING_TESTS_FILE = "data/questions/typing_tests.json"
 WRITTEN_TEST_QUESTIONS_FILE = "data/questions/written_test_questions.json"
 USERS_FILE = "data/users.json"
 
-# Legacy admin credentials (for migration/fallback)
+# Legacy admin credentials (for migration/fallback) - DEPRECATED
+# Use MongoDB to create admin users or API calls instead
 ADMIN_USERNAME = os.getenv("ADMIN_USERNAME")
 ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD")
 
-# Default super admin credentials (if no users exist)
-DEFAULT_SUPER_ADMIN = {
-    "id": "super_admin_1",
-    "username": os.getenv("ADMIN_USERNAME", "admin"),
-    "password": os.getenv("ADMIN_PASSWORD", "admin123"), # This will be hashed
-    "role": "super_admin",
-    "full_name": "Default Super Admin",
-    "email": "admin@example.com",
-    "active": True,
-    "created_at": None,
-    "created_by": "system",
-    "last_login": None
-}
+# Default super admin credentials removed for security
+# Create admin users directly via MongoDB or use the API endpoint
+DEFAULT_SUPER_ADMIN = None
 
 # User roles and permissions
 USER_ROLES = {
@@ -77,5 +69,7 @@ FLASK_DEBUG = FLASK_ENV == "development"
 MAX_QUESTIONS_PER_SESSION = 5
 
 # JWT Configuration
-JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY", "your-secret-key-change-this-in-production")
+JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY")
+if not JWT_SECRET_KEY:
+    raise ValueError("JWT_SECRET_KEY environment variable must be set in .env file")
 JWT_EXPIRATION_HOURS = int(os.getenv("JWT_EXPIRATION_HOURS", "24")) 

@@ -1,4 +1,4 @@
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify, request, send_from_directory
 import os
 from config import ADMIN_USERNAME, ADMIN_PASSWORD
 from utils.file_ops import (
@@ -9,6 +9,10 @@ from utils.file_ops import (
 )
 from utils.session import clear_session
 from utils.auth import require_permission, require_auth
+from utils.resume_ops import (
+    save_applicant_resume, get_applicant_resume, delete_applicant_resume, 
+    get_applicant_all_resumes
+)
 
 admin_bp = Blueprint('admin', __name__)
 
@@ -270,14 +274,16 @@ def admin_reload_questions():
 
 @admin_bp.route("/admin/auth", methods=["POST"])
 def admin_auth():
-    """Admin authentication endpoint"""
+    """Admin authentication endpoint (DEPRECATED - Use /users/login instead)"""
     try:
         data = request.json  # Get JSON data from request body
         if not data or not data.get("username") or not data.get("password"):  # Validate required fields
             return jsonify({"success": False, "message": "Username and password required"}), 400
         
-        # Check credentials
-        if data["username"] == ADMIN_USERNAME and data["password"] == ADMIN_PASSWORD:  # Validate admin credentials
+        # DEPRECATED: Legacy admin authentication
+        # This endpoint is kept for backward compatibility only
+        # Use the /users/login endpoint with proper user management instead
+        if ADMIN_USERNAME and ADMIN_PASSWORD and data["username"] == ADMIN_USERNAME and data["password"] == ADMIN_PASSWORD:
             return jsonify({"success": True, "message": "Authentication successful"})  # Return success response
         else:
             return jsonify({"success": False, "message": "Invalid credentials"}), 401  # Return authentication failure
@@ -319,6 +325,9 @@ def admin_delete_applicant(session_id):
                     # Clean up recordings
                     cleanup_recordings(session_id)  # Remove applicant's audio recordings
                     
+                    # Delete applicant's resumes
+                    delete_applicant_resume(session_id)  # Remove all resume files
+                    
                     return jsonify({"success": True, "message": "Temporary applicant deleted successfully"})  # Return success response
                 except Exception as e:  # Handle temporary data deletion errors
                     print(f"Error deleting temporary files: {e}")  # Log deletion error
@@ -338,6 +347,9 @@ def admin_delete_applicant(session_id):
         # Clean up temporary files and recordings
         cleanup_temp_files(session_id)  # Remove temporary data files
         cleanup_recordings(session_id)  # Remove audio recordings
+        
+        # Delete applicant's resumes
+        delete_applicant_resume(session_id)  # Remove all resume files
         
         # Clear session state
         clear_session(session_id)  # Clear session data from memory
@@ -676,4 +688,254 @@ def update_applicant_status(applicant_id):
         
     except Exception as e:
         print(f"Error updating status for applicant {applicant_id}: {str(e)}")
-        return jsonify({"success": False, "message": f"Error updating status: {str(e)}"}), 500 
+        return jsonify({"success": False, "message": f"Error updating status: {str(e)}"}), 500
+
+
+# ============================================================================
+# RESUME MANAGEMENT ENDPOINTS
+# ============================================================================
+
+@admin_bp.route('/admin/applicants/<applicant_id>/resume', methods=['POST'])
+@require_auth()
+@require_permission('edit_evaluations')
+def upload_applicant_resume(applicant_id):
+    """
+    Upload a resume for a specific applicant
+    
+    Expects:
+        - file: Resume file (PDF, DOC, DOCX) in form-data
+        
+    Returns:
+        - success: bool
+        - message: str
+        - filename: str (if successful)
+        - path: str (if successful)
+    """
+    try:
+        # Check if applicant exists
+        applicant, storage_type, _ = find_applicant_data(applicant_id)
+        if not applicant:
+            return jsonify({
+                "success": False,
+                "message": "Applicant not found"
+            }), 404
+        
+        # Check if file is present
+        if 'file' not in request.files:
+            return jsonify({
+                "success": False,
+                "message": "No file part in the request"
+            }), 400
+        
+        file = request.files['file']
+        
+        # Save resume using resume operations
+        result = save_applicant_resume(file, applicant_id)
+        
+        if result['success']:
+            return jsonify({
+                "success": True,
+                "message": result['message'],
+                "filename": result['filename'],
+                "path": result['path']
+            }), 200
+        else:
+            return jsonify({
+                "success": False,
+                "message": result['message']
+            }), 400
+            
+    except Exception as e:
+        print(f"Error uploading resume for applicant {applicant_id}: {str(e)}")
+        return jsonify({
+            "success": False,
+            "message": f"Error uploading resume: {str(e)}"
+        }), 500
+
+
+@admin_bp.route('/admin/applicants/<applicant_id>/resume', methods=['GET'])
+@require_auth()
+def get_applicant_resume_endpoint(applicant_id):
+    """
+    Get the latest resume for a specific applicant
+    
+    Returns:
+        - success: bool
+        - filename: str
+        - path: str
+        - message: str
+    """
+    try:
+        # Check if applicant exists
+        applicant, storage_type, _ = find_applicant_data(applicant_id)
+        if not applicant:
+            return jsonify({
+                "success": False,
+                "message": "Applicant not found"
+            }), 404
+        
+        result = get_applicant_resume(applicant_id)
+        
+        status_code = 200 if result['success'] else 404
+        return jsonify(result), status_code
+        
+    except Exception as e:
+        print(f"Error retrieving resume for applicant {applicant_id}: {str(e)}")
+        return jsonify({
+            "success": False,
+            "message": f"Error retrieving resume: {str(e)}"
+        }), 500
+
+
+@admin_bp.route('/admin/applicants/<applicant_id>/resumes', methods=['GET'])
+@require_auth()
+def get_applicant_all_resumes_endpoint(applicant_id):
+    """
+    Get all resumes for a specific applicant
+    
+    Returns:
+        - success: bool
+        - resumes: list of resume objects
+        - message: str
+    """
+    try:
+        # Check if applicant exists
+        applicant, storage_type, _ = find_applicant_data(applicant_id)
+        if not applicant:
+            return jsonify({
+                "success": False,
+                "message": "Applicant not found"
+            }), 404
+        
+        result = get_applicant_all_resumes(applicant_id)
+        
+        status_code = 200 if result['success'] else 404
+        return jsonify(result), status_code
+        
+    except Exception as e:
+        print(f"Error retrieving all resumes for applicant {applicant_id}: {str(e)}")
+        return jsonify({
+            "success": False,
+            "message": f"Error retrieving resumes: {str(e)}"
+        }), 500
+
+
+@admin_bp.route('/admin/applicants/<applicant_id>/resume/<filename>', methods=['DELETE'])
+@require_auth()
+@require_permission('edit_evaluations')
+def delete_applicant_resume_file(applicant_id, filename):
+    """
+    Delete a specific resume file for an applicant
+    
+    Returns:
+        - success: bool
+        - message: str
+    """
+    try:
+        # Check if applicant exists
+        applicant, storage_type, _ = find_applicant_data(applicant_id)
+        if not applicant:
+            return jsonify({
+                "success": False,
+                "message": "Applicant not found"
+            }), 404
+        
+        result = delete_applicant_resume(applicant_id, filename)
+        
+        status_code = 200 if result['success'] else 400
+        return jsonify(result), status_code
+        
+    except Exception as e:
+        print(f"Error deleting resume for applicant {applicant_id}: {str(e)}")
+        return jsonify({
+            "success": False,
+            "message": f"Error deleting resume: {str(e)}"
+        }), 500
+
+
+@admin_bp.route('/admin/applicants/<applicant_id>/resume', methods=['DELETE'])
+@require_auth()
+@require_permission('edit_evaluations')
+def delete_applicant_all_resumes(applicant_id):
+    """
+    Delete all resumes for an applicant
+    
+    Returns:
+        - success: bool
+        - message: str
+    """
+    try:
+        # Check if applicant exists
+        applicant, storage_type, _ = find_applicant_data(applicant_id)
+        if not applicant:
+            return jsonify({
+                "success": False,
+                "message": "Applicant not found"
+            }), 404
+        
+        result = delete_applicant_resume(applicant_id)
+        
+        status_code = 200 if result['success'] else 400
+        return jsonify(result), status_code
+        
+    except Exception as e:
+        print(f"Error deleting all resumes for applicant {applicant_id}: {str(e)}")
+        return jsonify({
+            "success": False,
+            "message": f"Error deleting resumes: {str(e)}"
+        }), 500
+
+
+@admin_bp.route('/resume/<path:filepath>')
+@require_auth()
+def serve_resume(filepath):
+    """
+    Serve resume files from the resume directory
+    
+    Args:
+        filepath: Path to the resume file (e.g., applicant_id/resume_filename.pdf)
+        
+    Returns:
+        File content or 404 if not found
+    """
+    try:
+        from config import RESUME_DIR
+        
+        # Validate filepath to prevent directory traversal attacks
+        # Remove any .. or absolute paths
+        filepath = os.path.normpath(filepath)
+        if filepath.startswith('..') or os.path.isabs(filepath):
+            return jsonify({
+                "success": False,
+                "message": "Invalid file path"
+            }), 403
+        
+        # Construct full path
+        full_path = os.path.join(RESUME_DIR, filepath)
+        
+        # Ensure the full path is within RESUME_DIR
+        if not os.path.abspath(full_path).startswith(os.path.abspath(RESUME_DIR)):
+            return jsonify({
+                "success": False,
+                "message": "Invalid file path"
+            }), 403
+        
+        # Check if file exists
+        if not os.path.exists(full_path):
+            return jsonify({
+                "success": False,
+                "message": "Resume file not found"
+            }), 404
+        
+        # Get directory and filename
+        directory = os.path.dirname(full_path)
+        filename = os.path.basename(full_path)
+        
+        return send_from_directory(directory, filename)
+        
+    except Exception as e:
+        print(f"Error serving resume: {str(e)}")
+        return jsonify({
+            "success": False,
+            "message": f"Error retrieving resume: {str(e)}"
+        }), 500 

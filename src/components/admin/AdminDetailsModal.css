@@ -114,6 +114,7 @@
   align-items: center;
   min-width: 150px;
   justify-content: center;
+  margin: 5px 8px;
 }
 
 .details-toggle-button:hover {
@@ -123,6 +124,16 @@
 
 .details-toggle-button.expanded {
   background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  animation: buttonExpand 0.3s ease-out;
+}
+
+@keyframes buttonExpand {
+  from {
+    transform: scale(0.95);
+  }
+  to {
+    transform: scale(1);
+  }
 }
 
 .applicant-details h3 {
@@ -157,6 +168,20 @@
   border-radius: 12px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
   border-left: 4px solid #667eea;
+  animation: slideDownFadeIn 0.4s ease-out;
+}
+
+@keyframes slideDownFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+    max-height: 0;
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    max-height: 2000px;
+  }
 }
 
 .extended-details h4 {
@@ -1345,5 +1370,223 @@
 
 .personality-note {
   font-style: italic;
+}
+
+/* Resume Section Styles */
+.resume-section {
+  margin-top: 20px;
+  padding: 20px;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  border-left: 4px solid #667eea;
+  animation: slideDownFadeIn 0.4s ease-out;
+}
+
+.resume-section h3 {
+  color: #2F6798;
+  margin-bottom: 15px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #f7fafc;
+  font-size: 1.3rem;
+}
+
+.resume-section h4 {
+  color: #2F6798;
+  margin: 20px 0 15px 0;
+  font-size: 1rem;
+}
+
+/* Upload Section */
+.resume-upload-section {
+  margin-bottom: 20px;
+  padding: 15px;
+  background: #f8fafc;
+  border-radius: 8px;
+  border: 2px dashed #cbd5e0;
+}
+
+.upload-button {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.upload-button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.upload-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.upload-error-message {
+  color: #ef4444;
+  font-size: 0.9rem;
+  padding: 10px;
+  margin-top: 10px;
+  background: #fee2e2;
+  border-radius: 6px;
+  border-left: 4px solid #ef4444;
+}
+
+/* Resume Viewer Section */
+.resume-viewer-section {
+  margin-top: 20px;
+}
+
+.resume-info {
+  background: #edf2f7;
+  padding: 12px;
+  border-radius: 6px;
+  margin-bottom: 15px;
+  font-size: 0.9rem;
+}
+
+.resume-info p {
+  margin: 5px 0;
+}
+
+.resume-viewer {
+  width: 100%;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  background: #f7fafc;
+}
+
+.resume-viewer iframe {
+  border: 1px solid #e2e8f0;
+}
+
+/* No Resume Message */
+.no-resume-message {
+  text-align: center;
+  padding: 40px 20px;
+  color: #718096;
+  background: #f7fafc;
+  border-radius: 8px;
+  border: 2px dashed #cbd5e0;
+}
+
+.no-resume-message p {
+  margin: 0;
+  font-size: 1rem;
+}
+
+/* Resume History */
+.resume-history {
+  margin-top: 25px;
+  padding-top: 20px;
+  border-top: 2px solid #e2e8f0;
+}
+
+.resume-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.resume-item {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: all 0.2s ease;
+}
+
+.resume-item:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.resume-item-info {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  flex: 1;
+}
+
+.resume-filename {
+  font-weight: 500;
+  color: #2d3748;
+  min-width: 200px;
+}
+
+.resume-date {
+  color: #718096;
+  font-size: 0.85rem;
+  min-width: 150px;
+}
+
+.resume-size {
+  color: #a0aec0;
+  font-size: 0.85rem;
+}
+
+.resume-item-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.view-button,
+.delete-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 6px 12px;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.view-button {
+  color: #2563eb;
+  background: #dbeafe;
+}
+
+.view-button:hover {
+  background: #bfdbfe;
+}
+
+.delete-button {
+  padding: 6px 8px;
+}
+
+.delete-button:hover {
+  background: #fee2e2;
+}
+
+@media (max-width: 768px) {
+  .resume-item {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .resume-item-info {
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+    margin-bottom: 10px;
+  }
+
+  .resume-item-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  .upload-button {
+    width: 100%;
+  }
 }
 

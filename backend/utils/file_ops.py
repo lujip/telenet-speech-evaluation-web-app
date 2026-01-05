@@ -2,7 +2,7 @@ import os
 import json
 import shutil
 from datetime import datetime
-from config import APPLICANTS_FILE, RECORDINGS_DIR, QUESTIONS_FILE, LISTENING_TEST_QUESTIONS_FILE, USERS_FILE, DEFAULT_SUPER_ADMIN
+from config import APPLICANTS_FILE, RECORDINGS_DIR, QUESTIONS_FILE, LISTENING_TEST_QUESTIONS_FILE, USERS_FILE
 from .db import db
 
 def ensure_data_directory():

@@ -7,6 +7,7 @@ const API_URL = import.meta.env.VITE_API_URL;
 const AdminDetailsModal = ({ applicant, onClose, getAuthHeaders, currentUser }) => {
   const [activeTab, setActiveTab] = useState('speech-evaluation');
   const [showExtendedDetails, setShowExtendedDetails] = useState(false);
+  const [showResume, setShowResume] = useState(false);
   
   // Comments state
   const [comments, setComments] = useState([]);
@@ -18,10 +19,18 @@ const AdminDetailsModal = ({ applicant, onClose, getAuthHeaders, currentUser }) 
   const [applicantStatus, setApplicantStatus] = useState('');
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
 
-  // Load comments when modal opens or applicant changes
+  // Resume state
+  const [currentResume, setCurrentResume] = useState(null);
+  const [allResumes, setAllResumes] = useState([]);
+  const [isUploadingResume, setIsUploadingResume] = useState(false);
+  const [resumeUploadError, setResumeUploadError] = useState('');
+  const [resumeUrl, setResumeUrl] = useState(null);
+
+  // Load comments and resumes when modal opens or applicant changes
   useEffect(() => {
     if (applicant && applicant.id) {
       loadComments();
+      loadApplicantResumes();
     }
   }, [applicant?.id]);
 
@@ -146,6 +155,121 @@ const AdminDetailsModal = ({ applicant, onClose, getAuthHeaders, currentUser }) 
     }
   };
 
+  const loadApplicantResumes = async () => {
+    try {
+      const response = await axios.get(
+        `${API_URL}/admin/applicants/${applicant.id}/resumes`,
+        { headers: getAuthHeaders() }
+      );
+
+      if (response.data.success && response.data.resumes.length > 0) {
+        setAllResumes(response.data.resumes);
+        const firstResume = response.data.resumes[0];
+        setCurrentResume(firstResume);
+        await loadResumeBlob(firstResume.path);
+      } else {
+        setAllResumes([]);
+        setCurrentResume(null);
+        setResumeUrl(null);
+      }
+    } catch (error) {
+      console.error('Error loading resumes:', error);
+      setAllResumes([]);
+      setCurrentResume(null);
+      setResumeUrl(null);
+    }
+  };
+
+  const loadResumeBlob = async (resumePath) => {
+    try {
+      const response = await axios.get(
+        `${API_URL}/resume/${resumePath}`,
+        {
+          headers: getAuthHeaders(),
+          responseType: 'blob'
+        }
+      );
+      const url = window.URL.createObjectURL(response.data);
+      setResumeUrl(url);
+    } catch (error) {
+      console.error('Error loading resume blob:', error);
+      setResumeUrl(null);
+    }
+  };
+
+  const handleResumeUpload = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const allowedTypes = ['application/pdf', 'application/msword', 
+                          'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+    if (!allowedTypes.includes(file.type)) {
+      setResumeUploadError('Invalid file type. Please upload PDF or Word document.');
+      return;
+    }
+
+    const maxSize = 10 * 1024 * 1024;
+    if (file.size > maxSize) {
+      setResumeUploadError('File size exceeds 10 MB limit.');
+      return;
+    }
+
+    setIsUploadingResume(true);
+    setResumeUploadError('');
+    
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const response = await axios.post(
+        `${API_URL}/admin/applicants/${applicant.id}/resume`,
+        formData,
+        {
+          headers: {
+            ...getAuthHeaders(),
+            'Content-Type': 'multipart/form-data'
+          }
+        }
+      );
+
+      if (response.data.success) {
+        setResumeUploadError('');
+        await loadApplicantResumes();
+        alert('Resume uploaded successfully!');
+      } else {
+        setResumeUploadError(response.data.message || 'Upload failed');
+      }
+    } catch (error) {
+      console.error('Resume upload error:', error);
+      setResumeUploadError(error.response?.data?.message || 'Failed to upload resume');
+    } finally {
+      setIsUploadingResume(false);
+      event.target.value = '';
+    }
+  };
+
+  const handleDeleteResume = async (filename) => {
+    if (!window.confirm('Are you sure you want to delete this resume?')) {
+      return;
+    }
+
+    try {
+      const response = await axios.delete(
+        `${API_URL}/admin/applicants/${applicant.id}/resume/${filename}`,
+        { headers: getAuthHeaders() }
+      );
+
+      if (response.data.success) {
+        await loadApplicantResumes();
+      } else {
+        setResumeUploadError(response.data.message || 'Failed to delete resume');
+      }
+    } catch (error) {
+      console.error('Error deleting resume:', error);
+      setResumeUploadError('Failed to delete resume');
+    }
+  };
+
   const formatDate = (dateString) => {
     if (!dateString) return 'N/A';
     return new Date(dateString).toLocaleString();
@@ -256,13 +380,19 @@ const AdminDetailsModal = ({ applicant, onClose, getAuthHeaders, currentUser }) 
               )}
             </div>
             
-            {/* Dropdown Toggle Button */}
+            {/* Dropdown Toggle Buttons */}
             <div className="details-toggle-container">
               <button 
                 className={`details-toggle-button ${showExtendedDetails ? 'expanded' : ''}`}
                 onClick={() => setShowExtendedDetails(!showExtendedDetails)}
               >
                 {showExtendedDetails ? '▼ Show Less Details' : '▶ Show More Details'}
+              </button>
+              <button 
+                className={`details-toggle-button ${showResume ? 'expanded' : ''}`}
+                onClick={() => setShowResume(!showResume)}
+              >
+                {showResume ? '▼ Hide Resume' : '▶ Show Resume'}
               </button>
             </div>
             
@@ -334,6 +464,102 @@ const AdminDetailsModal = ({ applicant, onClose, getAuthHeaders, currentUser }) 
                     <p>No work history available</p>
                   )}
                 </div>
+              </div>
+            )}
+
+            {/* Resume Section */}
+            {showResume && (
+              <div className="resume-section">
+                <h3>Resume</h3>
+                
+                {/* Upload Section */}
+                <div className="resume-upload-section">
+                  <input
+                    type="file"
+                    id="resumeInput"
+                    accept=".pdf,.doc,.docx"
+                    onChange={handleResumeUpload}
+                    disabled={isUploadingResume}
+                    style={{ display: 'none' }}
+                  />
+                  <button
+                    className="upload-button"
+                    onClick={() => document.getElementById('resumeInput').click()}
+                    disabled={isUploadingResume}
+                  >
+                    {isUploadingResume ? '⏳ Uploading...' : '📤 Upload Resume'}
+                  </button>
+                  {resumeUploadError && (
+                    <div className="upload-error-message">{resumeUploadError}</div>
+                  )}
+                </div>
+
+                {/* Resume Viewer */}
+                {currentResume ? (
+                  <div className="resume-viewer-section">
+                    <div className="resume-info">
+                      <p><strong>Current Resume:</strong> {currentResume.filename}</p>
+                      <p><strong>Uploaded:</strong> {formatDate(currentResume.uploaded_at)}</p>
+                    </div>
+                    {resumeUrl ? (
+                      <div className="resume-viewer">
+                        <iframe
+                          src={resumeUrl}
+                          type="application/pdf"
+                          width="100%"
+                          height="700"
+                          title="Applicant Resume"
+                        />
+                      </div>
+                    ) : (
+                      <div style={{ padding: '20px', textAlign: 'center', color: '#718096' }}>
+                        Loading resume...
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="no-resume-message">
+                    <p>No resume uploaded yet. Click "Upload Resume" to add one.</p>
+                  </div>
+                )}
+
+                {/* Resume History */}
+                {allResumes.length > 0 && (
+                  <div className="resume-history">
+                    <h4>Resume History</h4>
+                    <div className="resume-list">
+                      {allResumes.map((resume) => (
+                        <div key={resume.filename} className="resume-item">
+                          <div className="resume-item-info">
+                            <span className="resume-filename">{resume.filename}</span>
+                            <span className="resume-date">{formatDate(resume.uploaded_at)}</span>
+                            <span className="resume-size">({(resume.size / 1024).toFixed(2)} KB)</span>
+                          </div>
+                          <div className="resume-item-actions">
+                            {resume.filename !== currentResume?.filename && (
+                              <button
+                                className="view-button"
+                                onClick={async () => {
+                                  setCurrentResume(resume);
+                                  await loadResumeBlob(resume.path);
+                                }}
+                              >
+                                View
+                              </button>
+                            )}
+                            <button
+                              className="delete-button"
+                              onClick={() => handleDeleteResume(resume.filename)}
+                              title="Delete this resume"
+                            >
+                              🗑️
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>

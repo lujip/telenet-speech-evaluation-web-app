@@ -50,8 +50,10 @@ def login():
             else:
                 return jsonify({"success": False, "message": "Invalid credentials"}), 401
         
-        # Fallback to legacy admin credentials for migration
-        elif username == ADMIN_USERNAME and password == ADMIN_PASSWORD:
+        # DEPRECATED: Fallback to legacy admin credentials for migration
+        # Only works if ADMIN_USERNAME and ADMIN_PASSWORD are set in .env
+        # This is kept for backward compatibility - create proper users via MongoDB or API instead
+        elif ADMIN_USERNAME and ADMIN_PASSWORD and username == ADMIN_USERNAME and password == ADMIN_PASSWORD:
             # Create a temporary admin user object for legacy support
             legacy_admin = {
                 "id": "legacy_admin",
