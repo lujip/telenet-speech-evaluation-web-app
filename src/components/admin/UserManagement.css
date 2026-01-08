@@ -106,8 +106,8 @@
 .actions .btn {
   padding: 8px 8px;  /* Reduced padding for smaller buttons */
   font-size: 11px;   /* Slightly smaller font */
-  min-width: 70px;   /* Set a smaller minimum width */
-  max-width: 70px;   /* Limit maximum width */
+  min-width: 75px;   /* Set a smaller minimum width */
+  max-width: 75px;   /* Limit maximum width */
 }
 
 .btn {

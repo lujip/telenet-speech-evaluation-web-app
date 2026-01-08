@@ -6,6 +6,7 @@ const TypingTest = ({ onComplete, onNext, sessionId }) => {
   const [typedText, setTypedText] = useState('')
   const [timeLeft, setTimeLeft] = useState(60)
   const [isActive, setIsActive] = useState(false)
+  const [testStarted, setTestStarted] = useState(false)
   const [isComplete, setIsComplete] = useState(false)
   const [wpm, setWpm] = useState(0)
   const [accuracy, setAccuracy] = useState(0)
@@ -80,20 +81,33 @@ const TypingTest = ({ onComplete, onNext, sessionId }) => {
   }
 
   const startTest = () => {
-    setIsActive(true)
+    // Show the test interface but don't start timer yet - wait for first keystroke
+    setTestStarted(true)
+    setIsActive(false)
     setTimeLeft(60)
     setTypedText('')
     setWpm(0)
     setAccuracy(0)
     setIsComplete(false)
     completionTriggeredRef.current = false
-    inputRef.current?.focus()
+    // Focus the input after a short delay to ensure it's rendered
+    setTimeout(() => {
+      inputRef.current?.focus()
+    }, 100)
   }
 
   const handleInputChange = (e) => {
-    if (!isActive || isComplete) return
+    if (isComplete) return
     
     const value = e.target.value
+    
+    // Start timer on first keystroke
+    if (!isActive && value.length > 0) {
+      setIsActive(true)
+    }
+    
+    if (!isActive && value.length === 0) return
+    
     setTypedText(value)
     
     // Calculate accuracy
@@ -269,15 +283,16 @@ const TypingTest = ({ onComplete, onNext, sessionId }) => {
         </div>
       </div>
 
-      {!isActive && !isComplete && (
+      {!testStarted && !isComplete && (
         <div className="test-instructions">
           <p>You will have 60 seconds to type the text below as accurately as possible.</p>
           <p>Your typing speed (WPM) and accuracy will be recorded.</p>
+          <p className="timer-warning">Timer will start once you start typing</p>
           <button onClick={startTest} className="start-btn">Start Test</button>
         </div>
       )}
 
-      {isActive && (
+      {testStarted && !isComplete && (
         <div className="test-active">
           <div className="timer">Time Remaining: {formatTime(timeLeft)}</div>
           <div className="text-display">
@@ -293,7 +308,7 @@ const TypingTest = ({ onComplete, onNext, sessionId }) => {
                 return false;
               }}
               placeholder="Start typing here..."
-              disabled={!isActive || isComplete}
+              disabled={isComplete}
               className="typing-input"
             />
           </div>

@@ -13,7 +13,6 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-#openai.api_key = "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" 
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 client = OpenAI(api_key = OPENAI_API_KEY)
 # ------------------ API INTEGRATION (Type 1, simple prompt) ------------------ #

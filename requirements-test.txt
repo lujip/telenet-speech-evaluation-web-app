@@ -7,6 +7,3 @@ webdriver-manager>=4.0.0   # For managing browser drivers
 
 # Data processing for test utilities
 numpy>=1.24.0              # For audio data generation in tests
-
-# Additional packages that may be needed for comprehensive testing
-# (install main requirements.txt first for full functionality) 

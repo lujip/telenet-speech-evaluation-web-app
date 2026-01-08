@@ -536,12 +536,11 @@ const EvaluationPage = ({ onComplete, onNext }) => {
         <div className="box-container" style={{ textAlign: 'center', padding: '40px' }}>
           
           <div className="skip-speech-notice" style={{
-            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-            color: 'white',
+            
+            color: '#2F6798',
             padding: '40px',
             borderRadius: '12px',
             margin: '20px 0',
-            boxShadow: '0 4px 15px rgba(0, 0, 0, 0.2)'
           }}>
             <h2 style={{ marginBottom: '20px', fontSize: '28px' }}>Speech Evaluation Skipped</h2>
             <p style={{ fontSize: '18px', marginBottom: '15px', lineHeight: '1.6' }}>

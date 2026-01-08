@@ -180,8 +180,8 @@ const Admin = () => {
   }, [isAuthenticated, resetActivityTimer]);
 
   const handleDeleteApplicant = async (applicantId) => {
-    if (!hasPermission('delete_applicants')) {
-      alert('You do not have permission to delete applicants.');
+    if (currentUser?.role !== 'super_admin') {
+      alert('Only Super Admins can delete applicants. Please contact the IT Team.');
       return;
     }
     
@@ -698,6 +698,9 @@ const Admin = () => {
                       <button
                         onClick={() => handleDeleteApplicant(applicant.id)}
                         className="delete-applicant-button"
+                        disabled={currentUser?.role !== 'super_admin'}
+                        title={currentUser?.role === 'super_admin' ? 'Delete Applicant' : ''}
+                        data-tooltip={currentUser?.role !== 'super_admin' ? 'Contact / Email the IT Team to delete an applicant' : ''}
                       >
                         🗑️ Delete
                       </button>
@@ -822,7 +825,9 @@ const Admin = () => {
                         <button
                           onClick={() => handleDeleteApplicant(applicant.id)}
                           className="list-action-button delete-button"
-                          title="Delete Applicant"
+                          disabled={currentUser?.role !== 'super_admin'}
+                          title={currentUser?.role === 'super_admin' ? 'Delete Applicant' : ''}
+                          data-tooltip={currentUser?.role !== 'super_admin' ? 'Contact / Email the IT Team to delete an applicant' : ''}
                         >
                           Delete
                         </button>

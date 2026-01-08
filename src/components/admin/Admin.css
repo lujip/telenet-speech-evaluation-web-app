@@ -381,6 +381,42 @@
   background: #c53030 !important;
 }
 
+.list-action-button.delete-button:disabled {
+  background: #9ca3af !important;
+  cursor: not-allowed;
+  opacity: 0.6;
+  position: relative;
+}
+
+.list-action-button.delete-button:disabled:hover {
+  background: #9ca3af !important;
+}
+
+.list-action-button.delete-button:disabled::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 1);
+  color: white;
+  padding: 4px 6px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.1s ease;
+  margin-bottom: 5px;
+  z-index: 1000;
+  min-width: 12vh;
+  text-wrap: wrap;
+}
+
+.list-action-button.delete-button:disabled:hover::after {
+  opacity: 1;
+}
+
 .applicant-card {
   background: rgba(255, 255, 255, 0.95);
   border-radius: 15px;
@@ -499,6 +535,7 @@
   margin-top: auto;
   flex-shrink: 0;
   min-height: 0;
+  overflow: visible;
 }
 
 .view-details-button {
@@ -538,12 +575,52 @@
   overflow: hidden;
   text-overflow: ellipsis;
   min-width: 0;
+  position: relative;
 }
 
 .delete-applicant-button:hover {
   transform: translateY(-2px);
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
   background: linear-gradient(135deg, #c53030 0%, #a52a2a 100%);
+}
+
+.delete-applicant-button:disabled {
+  background: linear-gradient(135deg, #9ca3af 0%, #6b7280 100%);
+  cursor: not-allowed;
+  opacity: 0.6;
+  box-shadow: none;
+  overflow: visible;
+}
+
+.delete-applicant-button:disabled:hover {
+  transform: none;
+  box-shadow: none;
+  background: linear-gradient(135deg, #9ca3af 0%, #6b7280 100%);
+}
+
+.delete-applicant-button:disabled::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 1);
+  color: white;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.1s ease;
+  margin-bottom: 5px;
+  z-index: 1000;
+  min-width: 10vh;
+  text-wrap: wrap;
+}
+
+.delete-applicant-button:disabled:hover::after {
+  opacity: 1;
 }
 
 .no-applicants {

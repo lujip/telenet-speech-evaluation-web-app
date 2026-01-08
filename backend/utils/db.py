@@ -6,7 +6,6 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Get MongoDB connection string from environment variables
-# REQUIRED - no fallback to ensure explicit configuration
 mongo_uri = os.getenv('MONGODB_URI')
 mongo_db = os.getenv('MONGODB_DB')
 
